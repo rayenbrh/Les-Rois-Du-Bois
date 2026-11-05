@@ -65,7 +65,7 @@ const ClientLayout = () => {
                 </li>
                 <li className="flex items-center justify-center gap-2 sm:justify-start">
                   <Phone size={16} className="text-gold-600" />
-                  <span dir="ltr">+216 12 345 678</span>
+                  <span dir="ltr">+216 53 873 087</span>
                 </li>
                 <li className="flex items-center justify-center gap-2 sm:justify-start">
                   <MapPin size={16} className="text-gold-600" />

@@ -2,6 +2,7 @@ import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 import Logo from '../components/shared/Logo';
 import {
   LayoutDashboard,
@@ -36,6 +37,7 @@ const Layout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  useBodyScrollLock(open);
 
   const handleLogout = () => {
     logout();
@@ -64,6 +66,15 @@ const Layout = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Mobile menu backdrop */}
+      {open && (
+        <div
+          className="fixed inset-0 z-[35] bg-black/50 md:hidden"
+          onClick={() => setOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Sidebar */}
       <aside
         className={`fixed inset-y-0 right-0 w-64 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 shadow-lg z-40 flex flex-col transform transition-transform ${
@@ -83,7 +94,7 @@ const Layout = () => {
           </div>
         </div>
 
-        <nav className="p-4 space-y-2 overflow-y-auto flex-1 min-h-0">
+        <nav className="p-4 space-y-2 overflow-y-auto overscroll-contain flex-1 min-h-0">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isHomepage = item.path === '/admin/homepage';

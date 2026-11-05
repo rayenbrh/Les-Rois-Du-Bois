@@ -42,3 +42,7 @@ backend/uploads/*
 # Cursor
 .cursor/
 
+
+# Local deployment backups (contain secrets)
+easypanel-old-config-backup.txt
+backups/

@@ -25,6 +25,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { useScrollDirection } from '../../hooks/useScrollDirection';
 import clientApi from '../../utils/clientAxios';
 import Logo from '../shared/Logo';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
 const navLinks = [
   { to: '/shop', label: 'الرئيسية', icon: Home, end: true },
@@ -105,12 +106,7 @@ const EnhancedHeader = () => {
   }, [location.pathname]);
 
   // Lock page scroll behind the mobile drawer
-  useEffect(() => {
-    document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [mobileMenuOpen]);
+  useBodyScrollLock(mobileMenuOpen);
 
   const cartCount = getCartItemsCount();
   const hidden = scrollDirection === 'down' && isScrolled && !mobileMenuOpen;
@@ -318,7 +314,7 @@ const EnhancedHeader = () => {
                 </button>
               </div>
 
-              <div className="flex-1 space-y-1 overflow-y-auto p-3">
+              <div className="flex-1 space-y-1 overflow-y-auto overscroll-contain p-3">
                 {isAuthenticated && (
                   <div className="mb-3 rounded-2xl bg-gray-50 p-4 dark:bg-gray-800">
                     <p className="truncate font-semibold text-gray-900 dark:text-gray-100">{user?.name}</p>

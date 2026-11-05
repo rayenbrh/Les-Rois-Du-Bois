@@ -19,6 +19,7 @@ import {
   Package,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
 const CommercialLayout = () => {
   const { user, logout } = useAuth();
@@ -26,6 +27,7 @@ const CommercialLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  useBodyScrollLock(open);
 
   const handleLogout = () => {
     logout();
@@ -45,6 +47,15 @@ const CommercialLayout = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Mobile menu backdrop */}
+      {open && (
+        <div
+          className="fixed inset-0 z-[35] bg-black/50 md:hidden"
+          onClick={() => setOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Sidebar */}
       <aside
         className={`fixed inset-y-0 right-0 w-64 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 shadow-lg z-40 flex flex-col transform transition-transform ${
@@ -64,7 +75,7 @@ const CommercialLayout = () => {
           </div>
         </div>
 
-        <nav className="p-4 space-y-2 overflow-y-auto flex-1 min-h-0">
+        <nav className="p-4 space-y-2 overflow-y-auto overscroll-contain flex-1 min-h-0">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
