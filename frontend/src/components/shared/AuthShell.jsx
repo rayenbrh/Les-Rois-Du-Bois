@@ -7,7 +7,7 @@ const AuthShell = ({ title, subtitle, children, footer }) => {
   const { isDark, toggleTheme } = useTheme();
 
   return (
-    <div className="relative flex min-h-[100dvh] items-center justify-center overflow-hidden px-4 py-10" dir="rtl">
+    <div className="relative flex min-h-[100dvh] items-center justify-center overflow-hidden px-4 pb-10 pt-20" dir="rtl">
       {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-gold-50 via-white to-amber-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900" />
       <div className="pointer-events-none absolute -top-24 -right-24 h-80 w-80 rounded-full bg-gold-400/20 blur-3xl" />
