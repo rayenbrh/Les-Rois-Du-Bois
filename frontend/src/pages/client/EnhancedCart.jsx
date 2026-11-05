@@ -167,7 +167,7 @@ const EnhancedCart = () => {
       </div>
 
       {/* Sticky mobile checkout bar */}
-      <div className="safe-bottom fixed inset-x-0 bottom-0 z-30 border-t border-gray-200 bg-white/95 p-3 backdrop-blur-lg lg:hidden dark:border-gray-700 dark:bg-gray-900/95">
+      <div className="safe-bottom sticky inset-x-0 bottom-0 z-30 border-t border-gray-200 bg-white/95 p-3 backdrop-blur-lg lg:hidden dark:border-gray-700 dark:bg-gray-900/95">
         <div className="container flex items-center gap-3 !px-0">
           <div className="flex-1">
             <p className="text-xs text-gray-500">الإجمالي</p>
