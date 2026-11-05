@@ -1,0 +1,39 @@
+{
+  "name": "les-rois-des-bois-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon server.js",
+    "start": "node server.js",
+    "create-admin": "node scripts/createAdmin.js",
+    "create-qr-user": "node scripts/createQRUser.js",
+    "seed-client": "node scripts/seedClientData.js",
+    "seed": "node scripts/seedDatabase.js",
+    "init-commercial-expenses": "node scripts/initCommercialExpenseCategory.js",
+    "view-orders-invoices": "node scripts/viewOrdersAndInvoices.js",
+    "delete-orders-invoices": "node scripts/deleteOrdersAndInvoices.js",
+    "delete-audit-logs": "node scripts/deleteAuditLogs.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "bullmq": "^5.0.0",
+    "compression": "^1.7.5",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-validator": "^7.0.1",
+    "handlebars": "^4.7.8",
+    "ioredis": "^5.3.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.0.3",
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^7.0.11",
+    "pdfkit": "^0.14.0",
+    "puppeteer": "^24.32.1",
+    "slugify": "^1.6.6"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}

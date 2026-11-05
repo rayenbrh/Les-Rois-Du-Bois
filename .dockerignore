@@ -1,0 +1,56 @@
+# Dependencies
+node_modules
+frontend/node_modules
+backend/node_modules
+npm-debug.log
+yarn-error.log
+
+# Build outputs
+dist
+frontend/dist
+*.log
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation
+README.md
+ARCHITECTURE.md
+*.md
+!LOCAL_TEST.md
+
+# Development files
+frontend.zip
+nginx.conf
+
+# Test files
+coverage
+.nyc_output
+
+# Temporary files
+*.tmp
+*.temp
+
+
+backend/uploads/*
+!backend/uploads/.gitkeep

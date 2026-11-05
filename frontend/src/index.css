@@ -1,0 +1,276 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==========================================================================
+   Design tokens
+   Light theme: warm orange accent (brand #fda63a) - Dark theme: gold accent.
+   Values are "R G B" triplets so Tailwind opacity modifiers work.
+   ========================================================================== */
+@layer base {
+  :root {
+    --gold-50: 255 247 237;
+    --gold-100: 255 237 213;
+    --gold-200: 254 215 170;
+    --gold-300: 253 186 116;
+    --gold-400: 253 166 58;   /* brand orange #fda63a */
+    --gold-500: 245 147 33;
+    --gold-600: 217 114 10;   /* buttons / accents (readable with white text) */
+    --gold-700: 180 83 9;     /* hover / strong accent text */
+    --gold-800: 146 64 14;
+    --gold-900: 120 53 15;
+    --on-gold: 255 255 255;
+
+    --surface: 255 255 255;
+    --surface-muted: 249 250 251;
+    --surface-raised: 255 255 255;
+
+    color-scheme: light;
+  }
+
+  .dark {
+    /* Scale is inverted in dark mode: low steps are dark gold tints, high steps light gold */
+    --gold-50: 43 37 17;
+    --gold-100: 59 50 20;
+    --gold-200: 87 73 26;
+    --gold-300: 138 115 32;
+    --gold-400: 255 225 77;
+    --gold-500: 255 215 0;    /* brand gold #FFD700 */
+    --gold-600: 245 197 24;   /* buttons / accents (used with dark text) */
+    --gold-700: 224 176 0;
+    --gold-800: 255 230 128;
+    --gold-900: 255 215 0;    /* used as translucent tint: dark:bg-gold-900/20 */
+    --on-gold: 31 28 26;
+
+    --surface: 31 28 26;
+    --surface-muted: 21 19 17;
+    --surface-raised: 44 40 37;
+
+    color-scheme: dark;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  body {
+    @apply bg-gray-50 text-gray-900 antialiased dark:bg-gray-900 dark:text-gray-100;
+    font-family: theme('fontFamily.sans');
+    font-feature-settings: 'kern';
+    text-rendering: optimizeLegibility;
+    min-height: 100dvh;
+  }
+
+  /* Avoid layout overflow from long words/URLs in RTL Arabic text */
+  h1, h2, h3, h4, p, td, th, span, a {
+    overflow-wrap: break-word;
+  }
+
+  img {
+    max-width: 100%;
+  }
+
+  input, select, textarea, button {
+    font: inherit;
+  }
+
+  /* iOS zooms into inputs with font-size < 16px */
+  @media (max-width: 640px) {
+    input, select, textarea {
+      font-size: 16px !important;
+    }
+  }
+
+  :focus-visible {
+    outline: 2px solid rgb(var(--gold-500));
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: rgb(var(--gold-400) / 0.3);
+  }
+
+  /* Scrollbars */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: rgb(168 162 158 / 0.6);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: rgb(var(--gold-500));
+  }
+  .dark ::-webkit-scrollbar-thumb {
+    background-color: rgb(87 83 78 / 0.8);
+  }
+
+  /* Number inputs: hide spinners (cleaner on mobile/POS) */
+  input[type='number']::-webkit-inner-spin-button,
+  input[type='number']::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type='number'] {
+    -moz-appearance: textfield;
+  }
+}
+
+/* ==========================================================================
+   Components
+   ========================================================================== */
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold
+      transition-all duration-200 select-none
+      disabled:cursor-not-allowed disabled:opacity-50
+      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 focus-visible:ring-offset-2
+      focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900;
+  }
+
+  .btn-primary {
+    @apply btn bg-gold-600 text-on-gold shadow-sm hover:bg-gold-700 active:scale-[0.98];
+  }
+
+  .btn-secondary {
+    @apply btn border border-gray-200 bg-white text-gray-800 hover:bg-gray-50
+      dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700;
+  }
+
+  .btn-ghost {
+    @apply btn text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800;
+  }
+
+  .btn-danger {
+    @apply btn bg-red-600 text-white hover:bg-red-700;
+  }
+
+  .btn-icon {
+    @apply inline-flex h-10 w-10 items-center justify-center rounded-xl text-gray-600 transition-colors
+      hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white;
+  }
+
+  .input-field {
+    @apply w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-400
+      shadow-sm transition-colors
+      focus:border-gold-500 focus:outline-none focus:ring-2 focus:ring-gold-500/30
+      disabled:cursor-not-allowed disabled:bg-gray-100
+      dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500
+      dark:disabled:bg-gray-900;
+  }
+
+  .label {
+    @apply mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300;
+  }
+
+  .card {
+    @apply rounded-2xl border border-gray-200 bg-white p-4 shadow-card sm:p-6
+      dark:border-gray-700/80 dark:bg-gray-800;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold;
+  }
+
+  .badge-gold {
+    @apply badge bg-gold-100 text-gold-800;
+  }
+
+  .page-title {
+    @apply text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl dark:text-gray-50;
+  }
+
+  .section-title {
+    @apply text-xl font-bold text-gray-900 sm:text-2xl dark:text-gray-100;
+  }
+
+  /* Responsive product grid used across the store */
+  .product-grid {
+    @apply grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5;
+  }
+
+  /* Tables: horizontal scroll on small screens instead of breaking the layout */
+  .table-wrap {
+    @apply w-full overflow-x-auto rounded-2xl border border-gray-200 dark:border-gray-700;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .skeleton {
+    @apply relative overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-700;
+  }
+  .skeleton::after {
+    content: '';
+    @apply absolute inset-0;
+    transform: translateX(100%);
+    background-image: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.35), transparent);
+    animation: shimmer 1.4s infinite;
+  }
+  .dark .skeleton::after {
+    background-image: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.06), transparent);
+  }
+}
+
+@layer utilities {
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   Legacy compatibility
+   Many screens use `bg-gold-* text-white`. In dark mode the gold is light, so
+   white text would be unreadable: switch it to the dark "on-gold" ink.
+   ========================================================================== */
+.dark .text-white:is(.bg-gold-400, .bg-gold-500, .bg-gold-600, .bg-gold-700, [class*='from-gold-']),
+.dark :is(.bg-gold-400, .bg-gold-500, .bg-gold-600, .bg-gold-700).text-white svg,
+.dark :is(.bg-gold-400, .bg-gold-500, .bg-gold-600, .bg-gold-700) > svg.text-white {
+  color: rgb(var(--on-gold));
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Admin tables on small screens: keep each cell on one line and scroll horizontally */
+@media (max-width: 1023px) {
+  .overflow-x-auto > table th,
+  .overflow-x-auto > table td {
+    white-space: nowrap;
+  }
+}
+/* Status pills never wrap */
+span.rounded-full {
+  white-space: nowrap;
+}

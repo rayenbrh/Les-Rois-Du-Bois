@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Orders & Products Analytics Report</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Arial', 'Tahoma', 'DejaVu Sans', sans-serif;
+      direction: rtl;
+      padding: 40px;
+      background: white;
+      color: #2c3e50;
+      font-size: 11px;
+      line-height: 1.6;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding: 25px;
+      background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+      color: #2c3e50;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      page-break-after: avoid;
+    }
+    .header h1 {
+      font-size: 26px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    }
+    .header .subtitle {
+      font-size: 14px;
+      margin: 5px 0;
+      opacity: 0.9;
+    }
+    .header .meta {
+      font-size: 12px;
+      margin-top: 10px;
+      color: #555;
+    }
+    .section {
+      margin-bottom: 30px;
+      page-break-inside: avoid;
+    }
+    .section-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 15px;
+      text-align: right;
+      color: #FFD700;
+      border-bottom: 3px solid #FFD700;
+      padding-bottom: 8px;
+      page-break-after: avoid;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      page-break-inside: auto;
+    }
+    table th,
+    table td {
+      padding: 10px;
+      text-align: right;
+      border: 1px solid #ddd;
+      font-size: 10px;
+    }
+    table th {
+      background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+      color: #2c3e50;
+      font-weight: bold;
+    }
+    table tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    table tr:hover {
+      background-color: #f5f5f5;
+    }
+    .kpi-comparison-table {
+      width: 100%;
+      margin: 20px 0;
+    }
+    .kpi-comparison-table th {
+      background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+      color: #2c3e50;
+      font-weight: bold;
+      padding: 12px;
+      text-align: center;
+    }
+    .kpi-comparison-table td {
+      padding: 10px;
+      text-align: center;
+      border: 1px solid #ddd;
+    }
+    .source-header {
+      background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%) !important;
+      color: #2c3e50 !important;
+      font-weight: bold;
+    }
+    .highlight {
+      background-color: #fff9c4 !important;
+      font-weight: bold;
+    }
+    .best {
+      background-color: #c8e6c9 !important;
+      font-weight: bold;
+    }
+    .warning {
+      background-color: #ffecb3 !important;
+    }
+    .revenue-breakdown {
+      display: flex;
+      justify-content: space-around;
+      margin: 20px 0;
+      page-break-inside: avoid;
+    }
+    .revenue-card {
+      flex: 1;
+      margin: 0 10px;
+      padding: 15px;
+      background: #f5f5f5;
+      border-radius: 8px;
+      border: 2px solid #FFD700;
+      text-align: center;
+    }
+    .revenue-card h3 {
+      font-size: 14px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #2c3e50;
+    }
+    .revenue-card .amount {
+      font-size: 20px;
+      font-weight: bold;
+      color: #FFD700;
+    }
+    .top-products-section {
+      margin: 20px 0;
+    }
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin: 20px 0;
+    }
+    .product-card {
+      background: #f9f9f9;
+      padding: 12px;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+    }
+    .product-card h4 {
+      font-size: 12px;
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: #2c3e50;
+    }
+    .product-card .details {
+      font-size: 10px;
+      color: #666;
+      margin: 3px 0;
+    }
+    .comparison-box {
+      background: #f0f0f0;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 15px 0;
+      border-right: 4px solid #FFD700;
+    }
+    .comparison-box h3 {
+      font-size: 14px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #2c3e50;
+    }
+    .comparison-box ul {
+      list-style: none;
+      padding-right: 20px;
+    }
+    .comparison-box li {
+      margin: 5px 0;
+      font-size: 11px;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 2px solid #FFD700;
+      font-size: 10px;
+      color: #666;
+      page-break-inside: avoid;
+    }
+    .page-number {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      color: #999;
+    }
+    @media print {
+      body {
+        padding: 20px;
+      }
+      .section {
+        page-break-inside: avoid;
+      }
+      table {
+        page-break-inside: auto;
+      }
+      tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <h1>Orders & Products Analytics — 3-Source Comparison</h1>
+    <div class="subtitle">تقرير تحليلات الطلبيات والمنتجات</div>
+    <div class="meta">
+      <div>تاريخ الإنشاء: {{dateGenerated}}</div>
+      <div>الفترة: {{dateRange}}</div>
+      <div>الفلاتر المطبقة: {{filtersApplied}}</div>
+    </div>
+  </div>
+
+  <!-- Section 1: Overview KPIs Comparison -->
+  <div class="section">
+    <div class="section-title">1. مؤشرات الأداء الرئيسية — مقارنة شاملة</div>
+    <table class="kpi-comparison-table">
+      <thead>
+        <tr>
+          <th>المؤشر</th>
+          <th class="source-header">E-commerce</th>
+          <th class="source-header">Store</th>
+          <th class="source-header">Page</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>إجمالي الطلبيات</strong></td>
+          <td>{{kpis.ecommerce.totalOrders}}</td>
+          <td>{{kpis.pos.totalOrders}}</td>
+          <td>{{kpis.page.totalOrders}}</td>
+        </tr>
+        <tr>
+          <td><strong>إجمالي الإيرادات (TND)</strong></td>
+          <td>{{kpis.ecommerce.totalRevenue}}</td>
+          <td>{{kpis.pos.totalRevenue}}</td>
+          <td>{{kpis.page.totalRevenue}}</td>
+        </tr>
+        <tr>
+          <td><strong>الربح (TND)</strong></td>
+          <td>{{kpis.ecommerce.profit}}</td>
+          <td>{{kpis.pos.profit}}</td>
+          <td>{{kpis.page.profit}}</td>
+        </tr>
+        <tr>
+          <td><strong>متوسط قيمة الطلب (TND)</strong></td>
+          <td>{{kpis.ecommerce.avgOrderValue}}</td>
+          <td>{{kpis.pos.avgOrderValue}}</td>
+          <td>{{kpis.page.avgOrderValue}}</td>
+        </tr>
+        <tr>
+          <td><strong>المنتجات المباعة</strong></td>
+          <td>{{kpis.ecommerce.itemsSold}}</td>
+          <td>{{kpis.pos.itemsSold}}</td>
+          <td>{{kpis.page.itemsSold}}</td>
+        </tr>
+        <tr>
+          <td><strong>الطلبيات الملغاة</strong></td>
+          <td class="warning">{{kpis.ecommerce.canceledOrders}}</td>
+          <td class="warning">{{kpis.pos.canceledOrders}}</td>
+          <td class="warning">{{kpis.page.canceledOrders}}</td>
+        </tr>
+        <tr>
+          <td><strong>الربح (TND)</strong></td>
+          <td>{{kpis.ecommerce.profit}}</td>
+          <td>{{kpis.pos.profit}}</td>
+          <td>{{kpis.page.profit}}</td>
+        </tr>
+        <tr>
+          <td><strong>معدل التحويل (%)</strong></td>
+          <td>{{kpis.ecommerce.conversionRate}}%</td>
+          <td>{{kpis.pos.conversionRate}}%</td>
+          <td>{{kpis.page.conversionRate}}%</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Section 2: Revenue Breakdown by Price Type -->
+  <div class="section">
+    <div class="section-title">2. تفصيل الإيرادات حسب نوع السعر</div>
+    <div class="revenue-breakdown">
+      <div class="revenue-card">
+        <h3>Prix en Gros</h3>
+        <div class="amount">{{kpis.ecommerce.totalRevenue}} TND</div>
+        <div style="font-size: 10px; color: #666; margin-top: 5px;">E-commerce</div>
+      </div>
+      <div class="revenue-card">
+        <h3>Prix en Détail</h3>
+        <div class="amount">{{kpis.pos.totalRevenue}} TND</div>
+        <div style="font-size: 10px; color: #666; margin-top: 5px;">Store / POS</div>
+      </div>
+      <div class="revenue-card">
+        <h3>Prix sur Page</h3>
+        <div class="amount">{{kpis.page.totalRevenue}} TND</div>
+        <div style="font-size: 10px; color: #666; margin-top: 5px;">Page / Social</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 3: Overall Summary -->
+  <div class="section">
+    <div class="section-title">3. ملخص عام</div>
+    <table>
+      <tr>
+        <th style="width: 50%;">المؤشر</th>
+        <th style="width: 50%;">القيمة</th>
+      </tr>
+      <tr>
+        <td>إجمالي الطلبيات</td>
+        <td><strong>{{overall.totalOrders}}</strong></td>
+      </tr>
+      <tr>
+        <td>إجمالي الإيرادات</td>
+        <td><strong>{{overall.totalRevenue}} TND</strong></td>
+      </tr>
+      <tr>
+        <td>الربح</td>
+        <td><strong>{{overall.totalProfit}} TND</strong></td>
+      </tr>
+      <tr>
+        <td>متوسط قيمة الطلب</td>
+        <td><strong>{{overall.avgOrderValue}} TND</strong></td>
+      </tr>
+      <tr>
+        <td>إجمالي المنتجات المباعة</td>
+        <td><strong>{{overall.totalItems}}</strong></td>
+      </tr>
+      <tr>
+        <td>إجمالي الطلبيات الملغاة</td>
+        <td class="warning"><strong>{{overall.canceledOrders}}</strong></td>
+      </tr>
+      <tr>
+        <td>إجمالي الربح</td>
+        <td><strong>{{overall.totalProfit}} TND</strong></td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Section 4: Top Products by Source -->
+  <div class="section">
+    <div class="section-title">4. أفضل المنتجات مبيعاً حسب المصدر</div>
+    
+    <div style="margin-bottom: 30px;">
+      <h3 style="font-size: 14px; margin-bottom: 10px; color: #2c3e50;">E-commerce (Prix en Gros)</h3>
+      {{#if topProducts.ecommerce}}
+      <table>
+        <thead>
+          <tr>
+            <th>المنتج</th>
+            <th>الكمية</th>
+            <th>الإيرادات (TND)</th>
+            <th>الربح (TND)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each topProducts.ecommerce}}
+          <tr>
+            <td>{{this.productName}}</td>
+            <td>{{this.quantity}}</td>
+            <td>{{this.revenue}}</td>
+            <td>{{#if this.profit}}{{this.profit}}{{else}}-{{/if}}</td>
+          </tr>
+          {{/each}}
+        </tbody>
+      </table>
+      {{else}}
+      <p style="text-align: center; color: #999; padding: 20px;">لا توجد منتجات</p>
+      {{/if}}
+    </div>
+
+    <div style="margin-bottom: 30px;">
+      <h3 style="font-size: 14px; margin-bottom: 10px; color: #2c3e50;">Store / POS (Prix en Détail)</h3>
+      {{#if topProducts.pos}}
+      <table>
+        <thead>
+          <tr>
+            <th>المنتج</th>
+            <th>الكمية</th>
+            <th>الإيرادات (TND)</th>
+            <th>الربح (TND)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each topProducts.pos}}
+          <tr>
+            <td>{{this.productName}}</td>
+            <td>{{this.quantity}}</td>
+            <td>{{this.revenue}}</td>
+            <td>{{#if this.profit}}{{this.profit}}{{else}}-{{/if}}</td>
+          </tr>
+          {{/each}}
+        </tbody>
+      </table>
+      {{else}}
+      <p style="text-align: center; color: #999; padding: 20px;">لا توجد منتجات</p>
+      {{/if}}
+    </div>
+
+    <div style="margin-bottom: 30px;">
+      <h3 style="font-size: 14px; margin-bottom: 10px; color: #2c3e50;">Page / Social (Prix sur Page)</h3>
+      {{#if topProducts.page}}
+      <table>
+        <thead>
+          <tr>
+            <th>المنتج</th>
+            <th>الكمية</th>
+            <th>الإيرادات (TND)</th>
+            <th>الربح (TND)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each topProducts.page}}
+          <tr>
+            <td>{{this.productName}}</td>
+            <td>{{this.quantity}}</td>
+            <td>{{this.revenue}}</td>
+            <td>{{#if this.profit}}{{this.profit}}{{else}}-{{/if}}</td>
+          </tr>
+          {{/each}}
+        </tbody>
+      </table>
+      {{else}}
+      <p style="text-align: center; color: #999; padding: 20px;">لا توجد منتجات</p>
+      {{/if}}
+    </div>
+  </div>
+
+  <!-- Section 5: Sample Orders Tables -->
+  <div class="section">
+    <div class="section-title">5. عينة من الطلبيات التفصيلية</div>
+    
+    <div style="margin-bottom: 30px;">
+      <h3 style="font-size: 14px; margin-bottom: 10px; color: #2c3e50;">E-commerce Orders</h3>
+      {{#if sampleOrders.ecommerce}}
+      <table>
+        <thead>
+          <tr>
+            <th>رقم الطلب</th>
+            <th>التاريخ</th>
+            <th>العميل</th>
+            <th>الكمية</th>
+            <th>المجموع (TND)</th>
+            <th>الحالة</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each sampleOrders.ecommerce}}
+          <tr>
+            <td>{{this.orderNumber}}</td>
+            <td>{{this.date}}</td>
+            <td>{{this.customer}}</td>
+            <td>{{this.itemCount}}</td>
+            <td>{{this.total}}</td>
+            <td>{{this.status}}</td>
+          </tr>
+          {{/each}}
+        </tbody>
+      </table>
+      {{else}}
+      <p style="text-align: center; color: #999; padding: 20px;">لا توجد طلبيات</p>
+      {{/if}}
+    </div>
+
+    <div style="margin-bottom: 30px;">
+      <h3 style="font-size: 14px; margin-bottom: 10px; color: #2c3e50;">Store / POS Orders</h3>
+      {{#if sampleOrders.pos}}
+      <table>
+        <thead>
+          <tr>
+            <th>رقم الطلب</th>
+            <th>التاريخ</th>
+            <th>العميل</th>
+            <th>الكمية</th>
+            <th>المجموع (TND)</th>
+            <th>الحالة</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each sampleOrders.pos}}
+          <tr>
+            <td>{{this.orderNumber}}</td>
+            <td>{{this.date}}</td>
+            <td>{{this.customer}}</td>
+            <td>{{this.itemCount}}</td>
+            <td>{{this.total}}</td>
+            <td>{{this.status}}</td>
+          </tr>
+          {{/each}}
+        </tbody>
+      </table>
+      {{else}}
+      <p style="text-align: center; color: #999; padding: 20px;">لا توجد طلبيات</p>
+      {{/if}}
+    </div>
+
+    <div style="margin-bottom: 30px;">
+      <h3 style="font-size: 14px; margin-bottom: 10px; color: #2c3e50;">Page / Social Orders</h3>
+      {{#if sampleOrders.page}}
+      <table>
+        <thead>
+          <tr>
+            <th>رقم الطلب</th>
+            <th>التاريخ</th>
+            <th>العميل</th>
+            <th>الكمية</th>
+            <th>المجموع (TND)</th>
+            <th>الحالة</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each sampleOrders.page}}
+          <tr>
+            <td>{{this.orderNumber}}</td>
+            <td>{{this.date}}</td>
+            <td>{{this.customer}}</td>
+            <td>{{this.itemCount}}</td>
+            <td>{{this.total}}</td>
+            <td>{{this.status}}</td>
+          </tr>
+          {{/each}}
+        </tbody>
+      </table>
+      {{else}}
+      <p style="text-align: center; color: #999; padding: 20px;">لا توجد طلبيات</p>
+      {{/if}}
+    </div>
+  </div>
+
+  <!-- Section 6: Performance Comparison -->
+  <div class="section">
+    <div class="section-title">6. مقارنة الأداء — تحليل شامل</div>
+    <div class="comparison-box">
+      <h3>أفضل الأداء</h3>
+      <ul>
+        <li><strong>أعلى إيرادات:</strong> {{performanceComparison.bestRevenue}}</li>
+        <li><strong>أفضل ربح:</strong> {{performanceComparison.bestProfit}}</li>
+        <li><strong>أقل إلغاءات:</strong> {{performanceComparison.lowestCancellations}}</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div>تم إنشاء هذا التقرير تلقائياً بواسطة النظام</div>
+    <div style="margin-top: 5px;">Generated by System | {{dateGenerated}}</div>
+  </div>
+</body>
+</html>
+

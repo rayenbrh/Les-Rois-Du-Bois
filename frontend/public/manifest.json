@@ -1,0 +1,19 @@
+{
+  "name": "Les Rois Du Bois",
+  "short_name": "LRDB",
+  "description": "Les Rois Du Bois - أثاث فاخر ونجارة",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#d9720a",
+  "orientation": "any",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "categories": ["shopping", "business"],
+  "lang": "ar",
+  "dir": "rtl",
+  "scope": "/"
+}

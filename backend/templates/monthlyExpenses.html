@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تقرير المصروفات الشهرية</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Arial', 'Tahoma', 'DejaVu Sans', sans-serif;
+      direction: rtl;
+      padding: 30px;
+      background: #f8f9fa;
+      color: #2c3e50;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding: 20px;
+      background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+      color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .header h1 {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 5px;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+    }
+    .header .subtitle {
+      font-size: 14px;
+      opacity: 0.95;
+    }
+    .categories-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 30px;
+    }
+    .category-table {
+      width: calc(33.333% - 8px);
+      min-width: 250px;
+      border: 2px solid #e0e0e0;
+      border-radius: 6px;
+      background: white;
+      margin-bottom: 15px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      overflow: hidden;
+    }
+    .category-header {
+      background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+      color: #2c3e50;
+      padding: 12px 15px;
+      font-weight: bold;
+      font-size: 13px;
+      text-align: right;
+      border-bottom: 2px solid #e6c200;
+    }
+    .expense-row {
+      padding: 10px 15px;
+      border-bottom: 1px solid #f0f0f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background-color 0.2s;
+    }
+    .expense-row:hover {
+      background-color: #f8f9fa;
+    }
+    .expense-row:nth-child(even) {
+      background-color: #fafbfc;
+    }
+    .expense-label {
+      flex: 1;
+      text-align: right;
+      padding-right: 15px;
+      font-size: 11px;
+      color: #34495e;
+    }
+    .expense-label .subcategory-tag {
+      display: inline-block;
+      background: #e3f2fd;
+      color: #1976d2;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 9px;
+      margin-left: 6px;
+      font-weight: 600;
+    }
+    .expense-amount {
+      text-align: left;
+      font-weight: bold;
+      min-width: 80px;
+      color: #27ae60;
+      font-size: 11px;
+    }
+    .category-total {
+      background: linear-gradient(135deg, #fff9e6 0%, #ffe6b3 100%);
+      padding: 12px 15px;
+      font-weight: bold;
+      font-size: 12px;
+      display: flex;
+      justify-content: space-between;
+      border-top: 2px solid #e6c200;
+      color: #2c3e50;
+    }
+    .empty-category {
+      padding: 20px;
+      text-align: center;
+      color: #95a5a6;
+      font-style: italic;
+      font-size: 11px;
+    }
+    .summary-box {
+      position: fixed;
+      bottom: 40px;
+      left: 40px;
+      width: 220px;
+      border: 2px solid #FFD700;
+      border-radius: 6px;
+      background: white;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      overflow: hidden;
+    }
+    .summary-header {
+      background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+      color: #2c3e50;
+      padding: 12px;
+      font-weight: bold;
+      font-size: 13px;
+      text-align: center;
+      border-bottom: 2px solid #e6c200;
+    }
+    .summary-row {
+      padding: 10px 12px;
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid #ecf0f1;
+      font-size: 11px;
+    }
+    .summary-row:last-child {
+      border-bottom: none;
+      background: #f8f9fa;
+      font-weight: bold;
+    }
+    .summary-label {
+      flex: 1;
+      text-align: right;
+      color: #555;
+    }
+    .summary-value {
+      font-weight: bold;
+      min-width: 80px;
+      text-align: left;
+      color: #2c3e50;
+    }
+    .negative {
+      color: #e74c3c;
+    }
+    .positive {
+      color: #27ae60;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      padding-top: 15px;
+      border-top: 2px solid #ecf0f1;
+      font-size: 10px;
+      color: #7f8c8d;
+    }
+    .expense-date {
+      font-size: 9px;
+      color: #95a5a6;
+      margin-top: 2px;
+      font-style: italic;
+    }
+    @media print {
+      body {
+        padding: 20px;
+        background: white;
+      }
+      .summary-box {
+        position: absolute;
+      }
+      .expense-row:hover {
+        background-color: inherit;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>تقرير المصروفات الشهرية</h1>
+    <div class="subtitle">المصروفات - {{monthName}} {{year}}</div>
+  </div>
+
+  <div class="categories-container">
+    {{#each categories}}
+    <div class="category-table">
+      <div class="category-header">{{this.name}}</div>
+      {{#if this.hasExpenses}}
+        {{#each this.expenses}}
+        <div class="expense-row">
+          <div class="expense-label">
+            {{this.label}}
+            {{#if this.date}}
+            <div class="expense-date">{{this.date}}</div>
+            {{/if}}
+          </div>
+          <div class="expense-amount">{{this.amount}} TND</div>
+        </div>
+        {{/each}}
+      {{else}}
+        <div class="empty-category">لا توجد مصروفات في هذه الفئة</div>
+      {{/if}}
+      <div class="category-total">
+        <span>المجموع</span>
+        <span>{{this.total}} TND</span>
+      </div>
+    </div>
+    {{/each}}
+  </div>
+
+  <div class="summary-box">
+    <div class="summary-header">ملخص المصروفات</div>
+    <div class="summary-row">
+      <span class="summary-label">الربح</span>
+      <span class="summary-value">{{benefit}} TND</span>
+    </div>
+    <div class="summary-row">
+      <span class="summary-label">إجمالي المصروفات</span>
+      <span class="summary-value">{{totalExpenses}} TND</span>
+    </div>
+    <div class="summary-row">
+      <span class="summary-label">المتبقي</span>
+      <span class="summary-value {{remainingClass}}">{{remaining}} TND</span>
+    </div>
+  </div>
+
+</body>
+</html>
+

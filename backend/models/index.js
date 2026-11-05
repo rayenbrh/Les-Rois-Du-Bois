@@ -1,0 +1,29 @@
+// Register every Mongoose model at startup so populate() never fails with
+// "Schema hasn't been registered" for a model no controller imported yet.
+import './AuditLog.model.js';
+import './Category.model.js';
+import './ClientNote.model.js';
+import './CreditNote.model.js';
+import './Expense.model.js';
+import './ExpenseCategory.model.js';
+import './FeaturedProduct.model.js';
+import './HomepageConfig.model.js';
+import './InventoryLog.model.js';
+import './Invoice.model.js';
+import './Job.model.js';
+import './Lead.model.js';
+import './Order.model.js';
+import './OrderActivity.model.js';
+import './Payment.model.js';
+import './Product.model.js';
+import './PurchaseOrder.model.js';
+import './Return.model.js';
+import './Sale.model.js';
+import './Setting.model.js';
+import './SpecialProduct.model.js';
+import './StockAlert.model.js';
+import './Store.model.js';
+import './Supplier.model.js';
+import './SupplierInvoice.model.js';
+import './TopSellerProduct.model.js';
+import './User.model.js';
