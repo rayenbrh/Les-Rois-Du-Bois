@@ -1,0 +1,214 @@
+/* Shared look for every PDF (A4 documents, reports and the 80 mm ticket). */
+:root {
+  --brand: #d9720a;
+  --brand-light: #fda63a;
+  --brand-tint: #fff5ea;
+  --ink: #1f2328;
+  --muted: #6b7280;
+  --line: #e5e7eb;
+  --line-strong: #d1d5db;
+  --ok: #15803d;
+  --ok-bg: #e9f7ee;
+  --warn: #b45309;
+  --warn-bg: #fff4e0;
+  --bad: #b91c1c;
+  --bad-bg: #fdecec;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  font-family: 'Noto Sans', 'Noto Sans Arabic', sans-serif;
+  color: var(--ink);
+  font-size: 9.5pt;
+  line-height: 1.4;
+  direction: ltr;
+  text-align: left;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+bdi { unicode-bidi: isolate; }
+.num, .nowrap { white-space: nowrap; }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+.center { text-align: center; }
+.muted { color: var(--muted); }
+.strong { font-weight: 700; }
+.positive { color: var(--ok); }
+.negative { color: var(--bad); }
+
+/* ---------- Header ---------- */
+.doc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8mm;
+  padding-bottom: 4mm;
+  border-bottom: 2px solid var(--brand);
+  margin-bottom: 6mm;
+}
+.company { display: flex; gap: 4mm; align-items: flex-start; min-width: 0; }
+.company-logo { width: 20mm; height: 20mm; object-fit: contain; flex: 0 0 auto; }
+.company-name { font-size: 14pt; font-weight: 700; line-height: 1.2; margin-bottom: 1mm; }
+.company-line { font-size: 8.5pt; color: var(--muted); }
+.doc-meta { text-align: right; flex: 0 0 auto; max-width: 95mm; }
+.doc-title {
+  font-size: 18pt;
+  font-weight: 700;
+  color: var(--brand);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+}
+.doc-subtitle { font-size: 9pt; color: var(--muted); margin-top: 1mm; }
+.doc-number { font-size: 11pt; font-weight: 700; margin-top: 1.5mm; }
+.doc-meta-line { font-size: 8.5pt; color: var(--muted); }
+.doc-meta-line b { color: var(--ink); font-weight: 700; }
+
+/* ---------- Party / info blocks ---------- */
+.blocks { display: flex; gap: 5mm; margin-bottom: 6mm; }
+.block {
+  flex: 1 1 0;
+  border: 1px solid var(--line);
+  border-radius: 2mm;
+  padding: 3mm 4mm;
+  break-inside: avoid;
+}
+.block-title {
+  font-size: 7.5pt;
+  font-weight: 700;
+  color: var(--brand);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 1.5mm;
+}
+.block-name { font-size: 11pt; font-weight: 700; }
+.kv { display: flex; justify-content: space-between; gap: 4mm; }
+.kv > span:first-child { color: var(--muted); }
+.kv > span:last-child { text-align: right; }
+
+/* ---------- Tables ---------- */
+table.table { width: 100%; border-collapse: collapse; margin-bottom: 5mm; }
+table.table thead { display: table-header-group; }
+table.table tfoot { display: table-row-group; }
+table.table tr { break-inside: avoid; page-break-inside: avoid; }
+table.table th {
+  background: var(--brand-tint);
+  color: #7a3e00;
+  font-size: 8pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  text-align: left;
+  padding: 2mm 2.5mm;
+  border-bottom: 1.5px solid var(--brand);
+}
+table.table th.num { text-align: right; }
+table.table th.center { text-align: center; }
+table.table td {
+  padding: 1.8mm 2.5mm;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+table.table tbody tr:nth-child(even) td { background: #fcfcfd; }
+table.table tr.total-row td {
+  font-weight: 700;
+  border-top: 1.5px solid var(--brand);
+  border-bottom: none;
+  background: var(--brand-tint);
+}
+.col-designation { width: auto; }
+.col-option { width: 22%; }
+.col-qty { width: 11%; }
+.col-money { width: 16%; }
+
+/* ---------- Totals + status ---------- */
+.summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8mm;
+  break-inside: avoid;
+  page-break-inside: avoid;
+  margin-bottom: 6mm;
+}
+.summary-left { flex: 1 1 auto; min-width: 0; }
+.totals { width: 80mm; flex: 0 0 auto; border-collapse: collapse; }
+.totals td { padding: 1.4mm 2.5mm; }
+.totals td:last-child { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.totals tr.grand td {
+  font-size: 11pt;
+  font-weight: 700;
+  color: #fff;
+  background: var(--brand);
+}
+.totals tr.due td { font-weight: 700; border-top: 1px solid var(--line-strong); }
+
+.status {
+  display: inline-block;
+  padding: 1mm 3mm;
+  border-radius: 10mm;
+  font-weight: 700;
+  font-size: 8.5pt;
+}
+.status-paid { color: var(--ok); background: var(--ok-bg); }
+.status-partial { color: var(--warn); background: var(--warn-bg); }
+.status-unpaid, .status-canceled { color: var(--bad); background: var(--bad-bg); }
+
+.notes {
+  border-left: 3px solid var(--brand-light);
+  background: #fafafa;
+  padding: 2.5mm 4mm;
+  margin-bottom: 5mm;
+  break-inside: avoid;
+}
+.notes-title { font-size: 7.5pt; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 1mm; }
+
+.signatures { display: flex; justify-content: space-between; gap: 10mm; margin-top: 8mm; break-inside: avoid; }
+.signature { flex: 0 0 65mm; border-top: 1px solid var(--line-strong); padding-top: 1.5mm; font-size: 8.5pt; color: var(--muted); text-align: center; height: 25mm; }
+
+/* ---------- Reports ---------- */
+.section { margin-bottom: 6mm; }
+.section-title {
+  font-size: 11pt;
+  font-weight: 700;
+  margin-bottom: 2.5mm;
+  padding-bottom: 1mm;
+  border-bottom: 1px solid var(--line);
+  break-after: avoid;
+  page-break-after: avoid;
+}
+.section-subtitle { font-size: 9.5pt; font-weight: 700; color: var(--brand); margin: 3mm 0 1.5mm; break-after: avoid; page-break-after: avoid; }
+.kpis { display: flex; flex-wrap: wrap; gap: 3mm; margin-bottom: 6mm; break-inside: avoid; }
+.kpi {
+  flex: 1 1 40mm;
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--brand);
+  border-radius: 1.5mm;
+  padding: 2.5mm 3mm;
+}
+.kpi-label { font-size: 7.5pt; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.kpi-value { font-size: 12pt; font-weight: 700; white-space: nowrap; }
+.empty { color: var(--muted); font-style: italic; padding: 2mm 0 4mm; }
+.keep { break-inside: avoid; page-break-inside: avoid; }
+
+/* ---------- 80 mm ticket ---------- */
+body.ticket { font-size: 8.5pt; }
+.ticket .t-head { text-align: center; padding-bottom: 2mm; border-bottom: 1px dashed var(--line-strong); margin-bottom: 2mm; }
+.ticket .t-logo { width: 16mm; height: 16mm; object-fit: contain; }
+.ticket .t-company { font-size: 11pt; font-weight: 700; }
+.ticket .t-line { font-size: 7.5pt; color: var(--muted); }
+.ticket .t-title { font-size: 10pt; font-weight: 700; color: var(--brand); text-transform: uppercase; margin-top: 1.5mm; }
+.ticket .t-meta { margin-bottom: 2mm; }
+.ticket .t-item { padding: 1mm 0; border-bottom: 1px dotted var(--line-strong); break-inside: avoid; }
+.ticket .t-item-name { font-weight: 700; }
+.ticket .t-item-row { display: flex; justify-content: space-between; gap: 2mm; color: var(--muted); }
+.ticket .t-item-row span:last-child { color: var(--ink); font-weight: 700; white-space: nowrap; }
+.ticket .t-totals { margin-top: 2mm; }
+.ticket .t-totals .kv { padding: 0.4mm 0; }
+.ticket .t-grand { font-size: 10.5pt; font-weight: 700; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); padding: 1mm 0; margin: 1mm 0; }
+.ticket .t-foot { text-align: center; margin-top: 3mm; padding-top: 2mm; border-top: 1px dashed var(--line-strong); font-size: 7.5pt; color: var(--muted); }
+
+table.statement { font-size: 8.5pt; }
+table.statement td { padding: 1.5mm 2mm; }
+table.statement th { padding: 2mm; }

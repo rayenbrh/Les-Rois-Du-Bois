@@ -1,0 +1,22 @@
+{{!-- Company identity (from Settings) + document title/number/meta.
+      Context: company { name, address, phone, email, taxId, logo }, doc { title, subtitle?, number?, meta: [{ label, value }] } --}}
+<header class="doc-header">
+  <div class="company">
+    {{#if company.logo}}<img class="company-logo" src="{{company.logo}}" alt="">{{/if}}
+    <div>
+      <div class="company-name">{{bdi company.name}}</div>
+      {{#if company.address}}<div class="company-line">{{bdi company.address}}</div>{{/if}}
+      {{#if company.phone}}<div class="company-line">Tél. : {{bdi company.phone}}</div>{{/if}}
+      {{#if company.email}}<div class="company-line">{{company.email}}</div>{{/if}}
+      {{#if company.taxId}}<div class="company-line">Matricule fiscal : {{bdi company.taxId}}</div>{{/if}}
+    </div>
+  </div>
+  <div class="doc-meta">
+    <div class="doc-title">{{doc.title}}</div>
+    {{#if doc.subtitle}}<div class="doc-subtitle">{{bdi doc.subtitle}}</div>{{/if}}
+    {{#if doc.number}}<div class="doc-number">N° {{doc.number}}</div>{{/if}}
+    {{#each doc.meta}}
+      <div class="doc-meta-line">{{label}} : <b>{{bdi value}}</b></div>
+    {{/each}}
+  </div>
+</header>

@@ -1,0 +1,17 @@
+{{!-- Totals + payment status. Context: totals { subtotal, discount, tax, total, paid, remaining, status { key, label } } --}}
+<div class="summary">
+  <div class="summary-left">
+    {{#if totals.status}}
+      <div class="block-title">Statut du paiement</div>
+      <span class="status status-{{totals.status.key}}">{{totals.status.label}}</span>
+    {{/if}}
+  </div>
+  <table class="totals">
+    <tr><td>Sous-total</td><td>{{money totals.subtotal}}</td></tr>
+    {{#if (positive totals.discount)}}<tr><td>Remise</td><td>- {{money totals.discount}}</td></tr>{{/if}}
+    {{#if (positive totals.tax)}}<tr><td>TVA</td><td>{{money totals.tax}}</td></tr>{{/if}}
+    <tr class="grand"><td>Total TTC</td><td>{{money totals.total}}</td></tr>
+    <tr><td>Montant payé</td><td>{{money totals.paid}}</td></tr>
+    <tr class="due"><td>Reste à payer</td><td>{{money totals.remaining}}</td></tr>
+  </table>
+</div>

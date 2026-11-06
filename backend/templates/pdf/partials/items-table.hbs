@@ -1,0 +1,25 @@
+{{!-- Line items. Context: items [{ designation, option?, quantity, unitPrice, total }] --}}
+<table class="table items">
+  <thead>
+    <tr>
+      <th class="col-designation">Désignation</th>
+      <th class="col-option">Option</th>
+      <th class="col-qty num">Quantité</th>
+      <th class="col-money num">Prix unitaire</th>
+      <th class="col-money num">Total</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each items}}
+    <tr>
+      <td>{{bdi designation}}</td>
+      <td>{{bdi option}}</td>
+      <td class="num">{{qty quantity}}</td>
+      <td class="num">{{money unitPrice}}</td>
+      <td class="num">{{money total}}</td>
+    </tr>
+    {{else}}
+    <tr><td colspan="5" class="center muted">Aucun article</td></tr>
+    {{/each}}
+  </tbody>
+</table>
