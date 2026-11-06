@@ -1,0 +1,40 @@
+{{!--
+  80 mm POS ticket. Same data shape as document.hbs (doc, party, items, totals, notes),
+  rendered with renderPdf('ticket', data, { format: 'ticket' }).
+--}}
+<div class="t-head">
+  {{#if company.logo}}<img class="t-logo" src="{{company.logo}}" alt="">{{/if}}
+  <div class="t-company">{{bdi company.name}}</div>
+  {{#if company.address}}<div class="t-line">{{bdi company.address}}</div>{{/if}}
+  {{#if company.phone}}<div class="t-line">Tél. : {{bdi company.phone}}</div>{{/if}}
+  {{#if company.taxId}}<div class="t-line">MF : {{bdi company.taxId}}</div>{{/if}}
+  <div class="t-title">{{doc.title}}</div>
+</div>
+
+<div class="t-meta">
+  {{#if doc.number}}<div class="kv"><span>N°</span><span>{{doc.number}}</span></div>{{/if}}
+  {{#each doc.meta}}<div class="kv"><span>{{label}}</span><span>{{bdi value}}</span></div>{{/each}}
+  {{#if party.name}}<div class="kv"><span>Client</span><span>{{bdi party.name}}</span></div>{{/if}}
+  {{#if party.phone}}<div class="kv"><span>Tél.</span><span>{{bdi party.phone}}</span></div>{{/if}}
+</div>
+
+{{#each items}}
+<div class="t-item">
+  <div class="t-item-name">{{bdi designation}}</div>
+  {{#if option}}<div class="muted">Option : {{bdi option}}</div>{{/if}}
+  <div class="t-item-row"><span>{{qty quantity}} × {{money unitPrice}}</span><span>{{money total}}</span></div>
+</div>
+{{/each}}
+
+<div class="t-totals">
+  <div class="kv"><span>Sous-total</span><span>{{money totals.subtotal}}</span></div>
+  {{#if (positive totals.discount)}}<div class="kv"><span>Remise</span><span>- {{money totals.discount}}</span></div>{{/if}}
+  {{#if (positive totals.tax)}}<div class="kv"><span>TVA</span><span>{{money totals.tax}}</span></div>{{/if}}
+  <div class="kv t-grand"><span>Total TTC</span><span>{{money totals.total}}</span></div>
+  <div class="kv"><span>Montant payé</span><span>{{money totals.paid}}</span></div>
+  <div class="kv strong"><span>Reste à payer</span><span>{{money totals.remaining}}</span></div>
+  {{#if totals.status}}<div class="kv"><span>Statut</span><span class="status status-{{totals.status.key}}">{{totals.status.label}}</span></div>{{/if}}
+</div>
+
+{{#if notes}}<div class="t-foot" style="text-align:left">{{multiline notes}}</div>{{/if}}
+<div class="t-foot">Merci pour votre visite !</div>

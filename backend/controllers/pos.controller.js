@@ -9,6 +9,7 @@ import Invoice from '../models/Invoice.model.js';
 import { adjustStock, validateStock, calculateTotalStock } from '../utils/inventoryHelper.js';
 import { buildOrderItems, calculateOrderTotals } from '../utils/orderHelper.js';
 import { generateBonCommandePDF } from '../services/bonCommandePdfService.js';
+import { generatePOSTicketPDF } from '../services/pdfService.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
@@ -666,8 +667,15 @@ export const generatePOSInvoice = async (req, res, next) => {
       });
     }
 
-    // For now, return invoice data as JSON
-    // PDF generation can be added later with PDFKit or similar
+    // ?format=pdf returns the 80 mm ticket instead of the JSON invoice
+    if (req.query?.format === 'pdf') {
+      await order.populate('cashierId', 'name');
+      const pdf = await generatePOSTicketPDF(order, invoice);
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `inline; filename="ticket-${order.orderNumber}.pdf"`);
+      return res.end(pdf);
+    }
+
     res.json({
       success: true,
       message: 'Invoice generated successfully',

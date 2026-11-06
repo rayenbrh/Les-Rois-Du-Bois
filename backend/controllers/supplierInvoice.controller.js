@@ -39,20 +39,7 @@ export const generatePDF = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'الفاتورة غير موجودة' });
     }
 
-    // If PDF already exists, return it
-    if (invoice.pdfPath) {
-      const fullPath = path.join(__dirname, '..', invoice.pdfPath);
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `inline; filename="${invoice.invoiceNumber}.pdf"`);
-      return res.sendFile(fullPath, (err) => {
-        if (err) {
-          console.error('Error sending PDF:', err);
-          res.status(500).json({ success: false, message: 'خطأ في إرسال ملف PDF' });
-        }
-      });
-    }
-
-    // Generate PDF
+    // Always regenerate: amounts and company details may have changed since the last export
     const pdfPath = await generateSupplierInvoicePDF(invoice);
 
     // Update invoice with PDF path
