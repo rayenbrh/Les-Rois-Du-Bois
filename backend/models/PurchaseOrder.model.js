@@ -26,6 +26,13 @@ const poItemSchema = new mongoose.Schema({
     required: true,
     min: 0,
   },
+  // Product option (same shape as order items' variant: { _id, value })
+  variant: {
+    type: Object,
+    default: null,
+  },
+  unitCostM: { type: Number, min: 0 }, // millimes, computed by the server for deliveries
+  totalM: { type: Number, min: 0 },
 });
 
 const purchaseOrderSchema = new mongoose.Schema(
@@ -71,6 +78,17 @@ const purchaseOrderSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    // Supplier account deliveries ("توريد"): recorded with status 'received'
+    kind: { type: String, enum: ['order', 'delivery'], default: 'order' },
+    totalM: { type: Number, min: 0 },
+    deliveredAt: { type: Date },
+    receiptImage: { type: String, default: '' },
+    stockAdded: { type: Boolean, default: false },
+    idempotencyKey: { type: String },
+    ledgerEntryId: { type: mongoose.Schema.Types.ObjectId, ref: 'SupplierLedgerEntry', default: null },
+    reversedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'SupplierLedgerEntry', default: null },
+    reversedAt: { type: Date },
+    reverseReason: { type: String, default: '' },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
@@ -94,6 +112,8 @@ purchaseOrderSchema.pre('validate', async function () {
 // Note: poNumber already has unique: true, which creates an index automatically
 purchaseOrderSchema.index({ supplierId: 1, createdAt: -1 });
 purchaseOrderSchema.index({ status: 1, createdAt: -1 });
+purchaseOrderSchema.index({ idempotencyKey: 1 }, { unique: true, sparse: true });
+purchaseOrderSchema.index({ supplierId: 1, kind: 1, deliveredAt: -1 });
 
 export default mongoose.model('PurchaseOrder', purchaseOrderSchema);
 
