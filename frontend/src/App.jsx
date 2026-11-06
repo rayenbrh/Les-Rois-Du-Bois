@@ -50,6 +50,8 @@ const ExpensesList = lazy(() => import('./pages/Expenses/ExpensesList'));
 const ExpenseCategories = lazy(() => import('./pages/Expenses/ExpenseCategories'));
 const ReturnsList = lazy(() => import('./pages/Returns/ReturnsList'));
 const ClientsList = lazy(() => import('./pages/CRM/ClientsList'));
+const DebtsList = lazy(() => import('./pages/CustomerDebts/DebtsList'));
+const CustomerAccount = lazy(() => import('./pages/CustomerDebts/CustomerAccount'));
 const UsersList = lazy(() => import('./pages/Users/UsersList'));
 const Settings = lazy(() => import('./pages/Settings/Settings'));
 const HeroBanner = lazy(() => import('./pages/Homepage/HeroBanner'));
@@ -174,6 +176,8 @@ const AppRoutes = () => {
             <Route path="expenses/categories" element={page(ExpenseCategories)} />
             <Route path="returns" element={page(ReturnsList)} />
             <Route path="crm" element={page(ClientsList)} />
+            <Route path="customer-debts" element={page(DebtsList)} />
+            <Route path="customer-debts/:id" element={page(CustomerAccount)} />
             <Route path="analytics" element={page(AnalyticsDashboard)} />
             <Route path="analytics/commercials" element={page(CommercialAnalyticsDashboard)} />
             <Route path="analytics/commercials/advanced" element={page(AdvancedCommercialAnalyticsDashboard)} />
