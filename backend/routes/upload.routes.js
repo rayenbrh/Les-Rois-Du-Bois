@@ -26,6 +26,9 @@ const storage = multer.diskStorage({
     } else if (req.path.includes('/settings')) {
       uploadPath = path.join(uploadPath, 'settings');
       folderType = 'settings';
+    } else if (req.path.includes('/supplier-delivery')) {
+      uploadPath = path.join(uploadPath, 'supplier-deliveries');
+      folderType = 'supplier-deliveries';
     } else if (req.path.includes('/expense') || req.path.includes('/receipt')) {
       uploadPath = path.join(uploadPath, 'expenses');
       folderType = 'expenses';
@@ -319,6 +322,22 @@ router.post('/expense/receipt', protect, uploadReceipt.single('receipt'), (req, 
   
   console.log('✅ [UPLOAD] Expense receipt uploaded successfully:', responseData);
   res.status(200).json(responseData);
+});
+
+// Supplier delivery receipt photo (images and PDFs), saved under /uploads/supplier-deliveries
+router.post('/supplier-delivery/receipt', protect, uploadReceipt.single('receipt'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ success: false, message: 'لم يتم رفع أي ملف' });
+  }
+  res.status(200).json({
+    success: true,
+    data: {
+      filename: req.file.filename,
+      path: `/uploads/supplier-deliveries/${req.file.filename}`,
+      originalName: req.file.originalname,
+      mimetype: req.file.mimetype,
+    },
+  });
 });
 
 export default router;
