@@ -225,56 +225,27 @@ const POSDashboard = () => {
     }
   };
 
+  // Save an edited POS order. When the customer of a credit sale already paid more than
+  // the new total, ask whether the difference is given back or kept as credit.
+  const saveOrderChange = async (payload) => {
+    const send = (overpaid) => api.put(`/pos/orders/${selectedOrder._id}`, { ...payload, ...(overpaid && { overpaid }) });
+    try {
+      return await send();
+    } catch (error) {
+      if (error.response?.data?.code !== 'OVERPAID_CHOICE_REQUIRED') throw error;
+      const message = error.response.data.message;
+      if (window.confirm(`${message}
+
+موافق = إرجاع المبلغ للعميل نقداً
+إلغاء = خيار آخر`)) return send('refund');
+      if (window.confirm('إبقاء المبلغ رصيداً للعميل يُستعمل في مشترياته القادمة؟')) return send('credit');
+      throw new Error('تم إلغاء العملية');
+    }
+  };
+
   const handleExchange = async (newProduct, variant, quantity) => {
     try {
-      // First, return the old product (restock)
       const oldItem = exchangeItem;
-      // Handle both populated and non-populated productId
-      const oldProductId = typeof oldItem.productId === 'object' && oldItem.productId?._id 
-        ? oldItem.productId._id.toString() 
-        : oldItem.productId?.toString() || oldItem.productId;
-      
-      const oldProductRes = await api.get(`/products/${oldProductId}`);
-      const oldProduct = oldProductRes.data.data;
-      
-      if (oldProduct.variants && Array.isArray(oldProduct.variants) && oldItem.variant) {
-        // Find and update variant stock
-        const updatedVariants = oldProduct.variants.map((v) => {
-          if (v.value === oldItem.variant.value || v._id?.toString() === oldItem.variant._id?.toString()) {
-            return { ...v, stock: (v.stock || 0) + oldItem.quantity };
-          }
-          return v;
-        });
-        await api.put(`/pos/products/${oldProduct._id}/stock`, {
-          variants: updatedVariants,
-        });
-      } else {
-        // Update product stock
-        await api.put(`/pos/products/${oldProductId}/stock`, {
-          stock: (oldProduct.stock || 0) + oldItem.quantity,
-        });
-      }
-
-      // Deduct stock from new product
-      const newProductRes = await api.get(`/products/${newProduct._id}`);
-      const newProductData = newProductRes.data.data;
-      
-      if (newProductData.variants && Array.isArray(newProductData.variants) && variant) {
-        const updatedVariants = newProductData.variants.map((v) => {
-          if (v.value === variant.value || v._id?.toString() === variant._id?.toString()) {
-            return { ...v, stock: Math.max(0, (v.stock || 0) - quantity) };
-          }
-          return v;
-        });
-        await api.put(`/pos/products/${newProductData._id}/stock`, {
-          variants: updatedVariants,
-        });
-      } else {
-        await api.put(`/pos/products/${newProduct._id}/stock`, {
-          stock: Math.max(0, (newProductData.stock || 0) - quantity),
-        });
-      }
-
       // Update order items
       const oldItemProductId = typeof oldItem.productId === 'object' && oldItem.productId?._id 
         ? oldItem.productId._id.toString() 
@@ -323,12 +294,8 @@ const POSDashboard = () => {
       const subtotal = updatedItems.reduce((sum, item) => sum + (item.total || 0), 0);
       const total = subtotal - (selectedOrder.discount || 0);
 
-      // Update order
-      await api.put(`/pos/orders/${selectedOrder._id}`, {
-        items: updatedItems,
-        subtotal,
-        total,
-      });
+      // Update order (stock and customer debt are updated on the server, all together)
+      await saveOrderChange({ items: updatedItems, action: 'exchange', subtotal, total });
 
       toast.success('تم استبدال المنتج بنجاح');
       setShowExchangeModal(false);
@@ -343,32 +310,6 @@ const POSDashboard = () => {
 
   const handleReturn = async (quantity, reason) => {
     try {
-      const item = returnItem;
-      // Handle both populated and non-populated productId
-      const productId = typeof item.productId === 'object' && item.productId?._id 
-        ? item.productId._id.toString() 
-        : item.productId?.toString() || item.productId;
-      
-      const productRes = await api.get(`/products/${productId}`);
-      const product = productRes.data.data;
-      
-      // Restock the product
-      if (product.variants && Array.isArray(product.variants) && item.variant) {
-        const updatedVariants = product.variants.map((v) => {
-          if (v.value === item.variant.value || v._id?.toString() === item.variant._id?.toString()) {
-            return { ...v, stock: (v.stock || 0) + quantity };
-          }
-          return v;
-        });
-        await api.put(`/pos/products/${product._id}/stock`, {
-          variants: updatedVariants,
-        });
-      } else {
-        await api.put(`/pos/products/${productId}/stock`, {
-          stock: (product.stock || 0) + quantity,
-        });
-      }
-
       // Update order items - remove or reduce quantity
       const returnProductId = typeof returnItem.productId === 'object' && returnItem.productId?._id 
         ? returnItem.productId._id.toString() 
@@ -405,12 +346,8 @@ const POSDashboard = () => {
       const subtotal = updatedItems.reduce((sum, item) => sum + (item.total || 0), 0);
       const total = subtotal - (selectedOrder.discount || 0);
 
-      // Update order
-      await api.put(`/pos/orders/${selectedOrder._id}`, {
-        items: updatedItems,
-        subtotal,
-        total,
-      });
+      // Update order (stock and customer debt are updated on the server, all together)
+      await saveOrderChange({ items: updatedItems, action: 'return', reason, subtotal, total });
 
       toast.success('تم إرجاع المنتج بنجاح');
       setShowReturnModal(false);

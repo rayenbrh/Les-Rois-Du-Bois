@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import PosBackLink from '../../components/shared/PosBackLink';
 import api from '../../utils/axios';
@@ -28,6 +28,8 @@ import {
 import { useAuth, CASHIER_ROLES } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { withBase } from '../../utils/imageUrl';
+import CreditSalePanel from '../../components/pos/CreditSale';
+import { formatMillimes, newIdempotencyKey } from '../../utils/money';
 
 // Helper function to get redirect path based on role
 const getBackPath = (role) => {
@@ -224,6 +226,13 @@ const POSInterface = () => {
 
   // Success modal
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  // "Non payé" sale: customer + amount paid now; one key per checkout so a retry never saves twice
+  const [creditSale, setCreditSale] = useState({ enabled: false, customer: null, paidNow: '' });
+  const checkoutKeyRef = useRef(null);
+  // A different cart is a different sale: start a new key
+  useEffect(() => {
+    checkoutKeyRef.current = null;
+  }, [cart, discount]);
   const [lastOrder, setLastOrder] = useState(null);
 
   // Client search filter for modal
@@ -909,6 +918,20 @@ const POSInterface = () => {
       return;
     }
 
+    const usesCommercialOrder = (isCommercial || isAdmin) && selectedClient;
+    if (!usesCommercialOrder && creditSale.enabled) {
+      if (!creditSale.customer) {
+        toast.error('اختر العميل للبيع بالدين');
+        return;
+      }
+      if ((Number(creditSale.paidNow) || 0) > calculations.total) {
+        toast.error('المبلغ المدفوع لا يمكن أن يتجاوز الإجمالي');
+        return;
+      }
+    }
+    if (loading) return;
+    if (!checkoutKeyRef.current) checkoutKeyRef.current = newIdempotencyKey();
+
     try {
       setLoading(true);
 
@@ -949,10 +972,11 @@ const POSInterface = () => {
       } : {
         items,
         discount,
-        vat: 0,
-        total: calculations.total,
         notes,
-        paymentMethod: 'cash',
+        idempotencyKey: checkoutKeyRef.current,
+        ...(creditSale.enabled && creditSale.customer
+          ? { credit: { customerId: creditSale.customer._id, paidNow: Number(creditSale.paidNow) || 0 } }
+          : {}),
       };
 
       const response = await api.post(endpoint, orderData);
@@ -964,6 +988,8 @@ const POSInterface = () => {
       
       setLastOrder(orderResponse);
       setShowSuccessModal(true);
+      checkoutKeyRef.current = null;
+      setCreditSale({ enabled: false, customer: null, paidNow: '' });
       setCart([]);
       setDiscount(0);
       setNotes('');
@@ -1641,6 +1667,16 @@ const POSInterface = () => {
                 </div>
               )}
 
+              <CreditSalePanel
+                value={creditSale}
+                onChange={(v) => {
+                  checkoutKeyRef.current = null;
+                  setCreditSale(v);
+                }}
+                total={calculations.total}
+                disabled={(isCommercial || isAdmin) && !!selectedClient}
+              />
+
               <div>
                 <label className="block text-sm text-gray-600 dark:text-gray-400 mb-2">ملاحظات:</label>
                 <textarea
@@ -1693,6 +1729,13 @@ const POSInterface = () => {
               <p className="text-2xl font-bold text-gold-600 dark:text-gold-500 mt-4">
                 {(lastOrder.order?.total || lastOrder.total || calculations.total).toFixed(2)} TND
               </p>
+              {lastOrder.credit && (
+                <div className="mt-4 space-y-1 rounded-xl bg-gold-50 p-3 text-sm dark:bg-gray-700">
+                  <p className="font-bold text-gray-900 dark:text-white">بيع بالدين: {lastOrder.credit.customer.name}</p>
+                  <p className="text-gray-700 dark:text-gray-300">الباقي على هذا البيع: <b>{formatMillimes(lastOrder.credit.remainingM)}</b></p>
+                  <p className="text-gray-700 dark:text-gray-300">مجموع دين العميل: <b>{formatMillimes(lastOrder.credit.balanceM)}</b></p>
+                </div>
+              )}
             </div>
             <div className="flex gap-2">
               <button
