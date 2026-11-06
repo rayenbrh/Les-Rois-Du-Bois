@@ -5,6 +5,8 @@ import { buildOrderItems, calculateOrderTotals } from '../utils/orderHelper.js';
 import { validateStock, adjustStock } from '../utils/inventoryHelper.js';
 import { deductOrderItemsStock, restoreOrderItemsStock, hasStockBeenTaken } from '../utils/stockService.js';
 import { createAuditLog } from '../utils/auditLogger.js';
+import { withTransaction, httpError } from '../db/transaction.js';
+import { changeOrderTotal } from '../services/customerAccount.service.js';
 
 export const getOrders = async (req, res, next) => {
   try {
@@ -398,47 +400,33 @@ export const getOrderActivity = async (req, res, next) => {
 
 export const cancelOrder = async (req, res, next) => {
   try {
-    const { reason } = req.body;
-    const order = await Order.findById(req.params.id);
+    const { reason, overpaid } = req.body;
+    await withTransaction(async () => {
+      const order = await Order.findById(req.params.id);
+      if (!order) throw httpError(404, 'الطلب غير موجود');
+      if (order.status === 'canceled') throw httpError(400, 'الطلب ملغي بالفعل');
 
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: 'الطلب غير موجود',
-      });
-    }
+      // Give the stock back if this order had already taken it
+      if (hasStockBeenTaken(order)) {
+        await restoreOrderItemsStock(order.items, req.user._id, `Order ${order.orderNumber} canceled`, order._id);
+      }
 
-    if (order.status === 'canceled') {
-      return res.status(400).json({
-        success: false,
-        message: 'الطلب ملغي بالفعل',
-      });
-    }
+      order.status = 'canceled';
+      order.canceledAt = new Date();
+      order.canceledBy = req.user._id;
+      order.cancelReason = reason;
+      await order.save();
 
-    // Give the stock back if this order had already taken it
-    if (hasStockBeenTaken(order)) {
-      await restoreOrderItemsStock(order.items, req.user._id, `Order ${order.orderNumber} canceled`, order._id);
-    }
+      // POS credit sale: remove what it still counted on the customer account
+      // (when part was paid, overpaid = 'refund' | 'credit' is required)
+      if (order.posCustomerId) {
+        await changeOrderTotal({ order, newTotalM: 0, type: 'cancel', overpaid, userId: req.user._id, reason: reason || '' });
+      }
 
-    order.status = 'canceled';
-    order.canceledAt = new Date();
-    order.canceledBy = req.user._id;
-    order.cancelReason = reason;
-
-    await order.save();
-
-    // Create activity log
-    await OrderActivity.create({
-      orderId: order._id,
-      action: 'canceled',
-      userId: req.user._id,
-      notes: reason || 'تم إلغاء الطلب',
+      await OrderActivity.create([{ orderId: order._id, action: 'canceled', userId: req.user._id, notes: reason || 'تم إلغاء الطلب' }]);
     });
 
-    res.status(200).json({
-      success: true,
-      message: 'تم إلغاء الطلب بنجاح',
-    });
+    res.status(200).json({ success: true, message: 'تم إلغاء الطلب بنجاح' });
   } catch (error) {
     next(error);
   }

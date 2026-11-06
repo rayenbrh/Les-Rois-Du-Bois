@@ -2,6 +2,9 @@ import mongoose from 'mongoose';
 import Return from '../models/Return.model.js';
 import Order from '../models/Order.model.js';
 import { adjustStock } from '../utils/inventoryHelper.js';
+import { withTransaction, httpError } from '../db/transaction.js';
+import { toMillimes } from '../utils/money.js';
+import { changeOrderTotal } from '../services/customerAccount.service.js';
 
 export const getReturns = async (req, res, next) => {
   try {
@@ -103,15 +106,32 @@ export const createReturn = async (req, res, next) => {
 
 export const approveReturn = async (req, res, next) => {
   try {
-    const returnDoc = await Return.findById(req.params.id);
-    if (!returnDoc) {
-      return res.status(404).json({ success: false, message: 'المرتجع غير موجود' });
-    }
+    const returnDoc = await withTransaction(async () => {
+      const doc = await Return.findById(req.params.id);
+      if (!doc) throw httpError(404, 'المرتجع غير موجود');
+      if (doc.status === 'approved' || doc.status === 'completed') throw httpError(400, 'المرتجع موافق عليه مسبقاً');
 
-    returnDoc.status = 'approved';
-    returnDoc.processedBy = req.user._id;
-    returnDoc.processedAt = new Date();
-    await returnDoc.save();
+      doc.status = 'approved';
+      doc.processedBy = req.user._id;
+      doc.processedAt = new Date();
+      await doc.save();
+
+      // POS credit sale: the debt goes down by the returned value
+      const order = await Order.findById(doc.orderId);
+      if (order?.posCustomerId && order.status !== 'canceled') {
+        const newTotalM = Math.max(0, (order.creditTotalM || 0) - toMillimes(doc.totalRefund));
+        await changeOrderTotal({
+          order,
+          newTotalM,
+          type: 'return',
+          overpaid: req.body.overpaid,
+          userId: req.user._id,
+          reason: doc.reason,
+          meta: { returnId: doc._id, returnNumber: doc.returnNumber },
+        });
+      }
+      return doc;
+    });
 
     res.json({ success: true, data: returnDoc });
   } catch (error) {
