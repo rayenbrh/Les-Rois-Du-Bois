@@ -1,0 +1,46 @@
+{{!-- All commercials summary. Data: doc, rows [{ name, revenue, orders, expenses, profit }], totals { revenue, orders, expenses, profit } --}}
+{{> header}}
+
+<div class="kpis">
+  <div class="kpi"><div class="kpi-label">Chiffre d'affaires</div><div class="kpi-value">{{money totals.revenue}}</div></div>
+  <div class="kpi"><div class="kpi-label">Commandes</div><div class="kpi-value">{{qty totals.orders}}</div></div>
+  <div class="kpi"><div class="kpi-label">Dépenses</div><div class="kpi-value">{{money totals.expenses}}</div></div>
+  <div class="kpi"><div class="kpi-label">Bénéfice</div><div class="kpi-value {{#if (negative totals.profit)}}negative{{else}}positive{{/if}}">{{money totals.profit}}</div></div>
+</div>
+
+<div class="section">
+  <div class="section-title">Synthèse par commercial</div>
+  {{#if rows.length}}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Commercial</th>
+        <th class="num" style="width:20%">Chiffre d'affaires</th>
+        <th class="num" style="width:12%">Commandes</th>
+        <th class="num" style="width:18%">Dépenses</th>
+        <th class="num" style="width:18%">Bénéfice</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each rows}}
+      <tr>
+        <td>{{bdi name}}</td>
+        <td class="num">{{money revenue}}</td>
+        <td class="num">{{qty orders}}</td>
+        <td class="num">{{money expenses}}</td>
+        <td class="num {{#if (negative profit)}}negative{{/if}}">{{money profit}}</td>
+      </tr>
+      {{/each}}
+      <tr class="total-row">
+        <td>Total</td>
+        <td class="num">{{money totals.revenue}}</td>
+        <td class="num">{{qty totals.orders}}</td>
+        <td class="num">{{money totals.expenses}}</td>
+        <td class="num">{{money totals.profit}}</td>
+      </tr>
+    </tbody>
+  </table>
+  {{else}}
+  <div class="empty">Aucune donnée pour cette période.</div>
+  {{/if}}
+</div>

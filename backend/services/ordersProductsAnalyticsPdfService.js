@@ -1,12 +1,27 @@
-import { generatePDFFromHTML } from './htmlToPdfService.js';
 import Order from '../models/Order.model.js';
-import Product from '../models/Product.model.js';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { renderPdfToUploads, formatPeriod, formatDateTime } from './pdf/index.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const SAMPLE_ORDERS_PER_SOURCE = 20;
+
+const SOURCE_LABELS = {
+  ecommerce: 'E-commerce (prix de gros)',
+  pos: 'Magasin / POS (prix de détail)',
+  page: 'Page / réseaux sociaux (prix page)',
+};
+
+const SHORT_SOURCE_LABELS = { ecommerce: 'E-commerce', pos: 'Magasin / POS', page: 'Page' };
+
+const ORDER_STATUS_LABELS = {
+  pending: 'En attente',
+  confirmed: 'Confirmée',
+  preparing: 'En préparation',
+  ready: 'Prête',
+  shipped: 'Expédiée',
+  delivered: 'Livrée',
+  completed: 'Terminée',
+  canceled: 'Annulée',
+  returned: 'Retournée',
+};
 
 /**
  * Map order source to the 3 source types (same logic as controller)
@@ -215,179 +230,102 @@ export const generateOrdersProductsAnalyticsPDF = async (params) => {
       topProductsBySource[sourceKey] = topProductsBySource[sourceKey].slice(0, 10);
     });
 
-    // Format date range text
-    let dateRangeText = 'جميع الفترات';
-    if (startDate || endDate) {
-      const start = startDate ? new Date(startDate).toLocaleDateString('fr-FR') : 'بداية';
-      const end = endDate ? new Date(endDate).toLocaleDateString('fr-FR') : 'نهاية';
-      dateRangeText = `${start} - ${end}`;
-    }
 
-    // Format filters text
     const filtersText = [];
-    if (source && source !== 'all') {
-      const sourceLabels = {
-        ecommerce: 'E-commerce',
-        pos: 'المتجر / POS',
-        page: 'الصفحة',
-      };
-      filtersText.push(`المصدر: ${sourceLabels[source] || source}`);
-    }
-    if (status && status !== 'all') {
-      filtersText.push(`الحالة: ${status}`);
-    }
+    if (source && source !== 'all') filtersText.push(`Source : ${SHORT_SOURCE_LABELS[source] || source}`);
+    if (status && status !== 'all') filtersText.push(`Statut : ${ORDER_STATUS_LABELS[status] || status}`);
 
-    // Prepare sample orders for the PDF (limit to first 20 per source)
-    const sampleOrdersBySource = {
-      ecommerce: analyticsBySource.ecommerce.orders.slice(0, 20).map(order => ({
-        orderNumber: order.orderNumber,
-        date: new Date(order.createdAt).toLocaleDateString('fr-FR'),
-        customer: order.clientName || order.clientId?.name || '-',
-        total: order.total.toFixed(2),
-        status: order.status,
-        itemCount: order.items.reduce((sum, item) => sum + item.quantity, 0),
-      })),
-      pos: analyticsBySource.pos.orders.slice(0, 20).map(order => ({
-        orderNumber: order.orderNumber,
-        date: new Date(order.createdAt).toLocaleDateString('fr-FR'),
-        customer: order.clientName || order.clientId?.name || '-',
-        total: order.total.toFixed(2),
-        status: order.status,
-        itemCount: order.items.reduce((sum, item) => sum + item.quantity, 0),
-      })),
-      page: analyticsBySource.page.orders.slice(0, 20).map(order => ({
-        orderNumber: order.orderNumber,
-        date: new Date(order.createdAt).toLocaleDateString('fr-FR'),
-        customer: order.clientName || order.clientId?.name || '-',
-        total: order.total.toFixed(2),
-        status: order.status,
-        itemCount: order.items.reduce((sum, item) => sum + item.quantity, 0),
-      })),
+    const toSampleOrder = (order) => ({
+      orderNumber: order.orderNumber,
+      date: order.createdAt,
+      customer: order.clientName || order.clientId?.name || '-',
+      total: order.total || 0,
+      status: ORDER_STATUS_LABELS[order.status] || order.status,
+      itemCount: order.items.reduce((sum, item) => sum + item.quantity, 0),
+    });
+
+    const toKpis = (data) => ({
+      totalOrders: data.totalOrders,
+      totalRevenue: data.totalRevenue,
+      avgOrderValue: data.averageOrderValue,
+      itemsSold: data.totalItems,
+      canceledOrders: data.canceledOrders,
+      profit: data.profit,
+      conversionRate: data.totalOrders > 0
+        ? ((data.totalOrders - data.canceledOrders) / data.totalOrders) * 100
+        : 0,
+    });
+
+    const bestBy = (metric, lowest = false) => {
+      const keys = ['ecommerce', 'pos', 'page'];
+      const sorted = [...keys].sort((a, b) => (lowest
+        ? analyticsBySource[a][metric] - analyticsBySource[b][metric]
+        : analyticsBySource[b][metric] - analyticsBySource[a][metric]));
+      return SHORT_SOURCE_LABELS[sorted[0]];
     };
 
-    // Create uploads/reports directory
-    const reportsDir = path.join(__dirname, '..', 'uploads', 'reports');
-    if (!fs.existsSync(reportsDir)) {
-      fs.mkdirSync(reportsDir, { recursive: true });
-    }
+    const sources = ['ecommerce', 'pos', 'page'].map((key) => ({
+      key,
+      label: SOURCE_LABELS[key],
+      kpis: toKpis(analyticsBySource[key]),
+      topProducts: topProductsBySource[key].map((p) => ({
+        productName: p.productName,
+        quantity: p.quantity,
+        revenue: p.revenue,
+        profit: p.profit || 0,
+      })),
+      sampleOrders: analyticsBySource[key].orders.slice(0, SAMPLE_ORDERS_PER_SOURCE).map(toSampleOrder),
+    }));
 
-    const fileName = `orders-products-analytics-${Date.now()}.pdf`;
-    const pdfPath = path.join(reportsDir, fileName);
+    const kpiRows = [
+      { label: 'Commandes', key: 'totalOrders', type: 'qty' },
+      { label: "Chiffre d'affaires", key: 'totalRevenue', type: 'money' },
+      { label: 'Bénéfice', key: 'profit', type: 'money' },
+      { label: 'Panier moyen', key: 'avgOrderValue', type: 'money' },
+      { label: 'Articles vendus', key: 'itemsSold', type: 'qty' },
+      { label: 'Commandes annulées', key: 'canceledOrders', type: 'qty' },
+      { label: 'Taux de validation', key: 'conversionRate', type: 'percent' },
+    ].map((row) => ({
+      ...row,
+      values: sources.map((s) => ({ value: s.kpis[row.key], type: row.type })),
+    }));
 
-    // Template path
-    const templatePath = path.join(__dirname, '..', 'templates', 'ordersProductsAnalytics.html');
-
-    // Template data
-    const templateData = {
-      reportTitle: 'Orders & Products Analytics — 3-Source Comparison',
-      dateGenerated: new Date().toLocaleString('fr-FR'),
-      dateRange: dateRangeText,
-      filtersApplied: filtersText.length > 0 ? filtersText.join(' | ') : 'لا توجد فلاتر',
-      
-      // KPIs Comparison
-      kpis: {
-        ecommerce: {
-          totalOrders: analyticsBySource.ecommerce.totalOrders,
-          totalRevenue: analyticsBySource.ecommerce.totalRevenue.toFixed(2),
-          avgOrderValue: analyticsBySource.ecommerce.averageOrderValue.toFixed(2),
-          itemsSold: analyticsBySource.ecommerce.totalItems,
-          canceledOrders: analyticsBySource.ecommerce.canceledOrders,
-          profit: analyticsBySource.ecommerce.profit.toFixed(2),
-          conversionRate: analyticsBySource.ecommerce.totalOrders > 0
-            ? ((analyticsBySource.ecommerce.totalOrders - analyticsBySource.ecommerce.canceledOrders) / analyticsBySource.ecommerce.totalOrders * 100).toFixed(2)
-            : '0.00',
-        },
-        pos: {
-          totalOrders: analyticsBySource.pos.totalOrders,
-          totalRevenue: analyticsBySource.pos.totalRevenue.toFixed(2),
-          avgOrderValue: analyticsBySource.pos.averageOrderValue.toFixed(2),
-          itemsSold: analyticsBySource.pos.totalItems,
-          canceledOrders: analyticsBySource.pos.canceledOrders,
-          profit: analyticsBySource.pos.profit.toFixed(2),
-          conversionRate: analyticsBySource.pos.totalOrders > 0
-            ? ((analyticsBySource.pos.totalOrders - analyticsBySource.pos.canceledOrders) / analyticsBySource.pos.totalOrders * 100).toFixed(2)
-            : '0.00',
-        },
-        page: {
-          totalOrders: analyticsBySource.page.totalOrders,
-          totalRevenue: analyticsBySource.page.totalRevenue.toFixed(2),
-          avgOrderValue: analyticsBySource.page.averageOrderValue.toFixed(2),
-          itemsSold: analyticsBySource.page.totalItems,
-          canceledOrders: analyticsBySource.page.canceledOrders,
-          profit: analyticsBySource.page.profit.toFixed(2),
-          conversionRate: analyticsBySource.page.totalOrders > 0
-            ? ((analyticsBySource.page.totalOrders - analyticsBySource.page.canceledOrders) / analyticsBySource.page.totalOrders * 100).toFixed(2)
-            : '0.00',
-        },
+    const data = {
+      documentTitle: 'Analyse des commandes et produits',
+      doc: {
+        title: 'Analyse des ventes',
+        subtitle: 'Commandes et produits par source',
+        meta: [
+          { label: 'Période', value: formatPeriod(startDate, endDate) },
+          { label: 'Filtres', value: filtersText.length ? filtersText.join(' | ') : 'Aucun' },
+          { label: 'Généré le', value: formatDateTime(new Date()) },
+        ],
       },
-      
-      // Overall totals
+      sourceHeaders: sources.map((s) => SHORT_SOURCE_LABELS[s.key]),
+      kpiRows,
+      sources,
       overall: {
         totalOrders: overall.totalOrders,
-        totalRevenue: overall.totalRevenue.toFixed(2),
-        totalProfit: overall.totalProfit.toFixed(2),
-        avgOrderValue: overall.averageOrderValue.toFixed(2),
+        totalRevenue: overall.totalRevenue,
+        totalProfit: overall.totalProfit,
+        avgOrderValue: overall.averageOrderValue,
         totalItems: overall.totalItems,
         canceledOrders: overall.canceledOrders,
       },
-      
-      // Top products (format with proper decimal places)
-      topProducts: {
-        ecommerce: topProductsBySource.ecommerce.map(p => ({
-          productName: p.productName,
-          quantity: p.quantity,
-          revenue: p.revenue.toFixed(2),
-          profit: p.profit ? p.profit.toFixed(2) : null,
-        })),
-        pos: topProductsBySource.pos.map(p => ({
-          productName: p.productName,
-          quantity: p.quantity,
-          revenue: p.revenue.toFixed(2),
-          profit: p.profit ? p.profit.toFixed(2) : null,
-        })),
-        page: topProductsBySource.page.map(p => ({
-          productName: p.productName,
-          quantity: p.quantity,
-          revenue: p.revenue.toFixed(2),
-          profit: p.profit ? p.profit.toFixed(2) : null,
-        })),
-      },
-      
-      // Sample orders (for detailed tables)
-      sampleOrders: sampleOrdersBySource,
-      
-      // Performance comparison
-      performanceComparison: {
-        bestRevenue: analyticsBySource.ecommerce.totalRevenue > analyticsBySource.pos.totalRevenue && analyticsBySource.ecommerce.totalRevenue > analyticsBySource.page.totalRevenue
-          ? 'E-commerce'
-          : analyticsBySource.pos.totalRevenue > analyticsBySource.page.totalRevenue
-          ? 'Store / POS'
-          : 'Page',
-        bestProfit: analyticsBySource.ecommerce.profit > analyticsBySource.pos.profit && analyticsBySource.ecommerce.profit > analyticsBySource.page.profit
-          ? 'E-commerce'
-          : analyticsBySource.pos.profit > analyticsBySource.page.profit
-          ? 'Store / POS'
-          : 'Page',
-        lowestCancellations: analyticsBySource.ecommerce.canceledOrders < analyticsBySource.pos.canceledOrders && analyticsBySource.ecommerce.canceledOrders < analyticsBySource.page.canceledOrders
-          ? 'E-commerce'
-          : analyticsBySource.pos.canceledOrders < analyticsBySource.page.canceledOrders
-          ? 'Store / POS'
-          : 'Page',
+      performance: {
+        bestRevenue: bestBy('totalRevenue'),
+        bestProfit: bestBy('profit'),
+        lowestCancellations: bestBy('canceledOrders', true),
       },
     };
 
-    // Generate PDF
-    await generatePDFFromHTML({
-      templatePath,
-      templateData,
-      outputPath: pdfPath,
-      landscape: true,
+    return renderPdfToUploads('orders-products-analytics', data, {
+      subDir: 'reports',
+      fileName: `orders-products-analytics-${Date.now()}.pdf`,
+      footerLabel: data.documentTitle,
     });
-
-    return `/uploads/reports/${fileName}`;
   } catch (error) {
     console.error('Error generating Orders & Products Analytics PDF:', error);
     throw error;
   }
 };
-

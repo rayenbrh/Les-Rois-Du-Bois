@@ -1,123 +1,83 @@
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { generatePDFFromHTML } from './htmlToPdfService.js';
+import { renderPdf, renderPdfToUploads, formatPeriod, formatDateTime } from './pdf/index.js';
+import { EXPENSE_SUBCATEGORY_LABELS, expenseDisplayLabel } from './expensePdfService.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const MAX_EXPENSE_ROWS = 50;
 
 /**
- * Generate commercial analytics PDF report with Arabic support
+ * Generate the commercial (sales rep) analytics PDF report (A4, French).
  * @param {Object} params - { commercial, metrics, expenses, expensesBreakdown, orders, startDate, endDate }
- * @returns {Promise<string>} - Path to generated PDF file
+ * @returns {Promise<string>} public path "/uploads/analytics/analytics-<id>-<range>-<ts>.pdf"
  */
 export const generateCommercialAnalyticsPDF = async (params) => {
-  try {
-    const {
-      commercial,
-      metrics,
-      expenses = [],
-      expensesBreakdown = {},
-      orders = [],
-      startDate,
-      endDate,
-    } = params;
+  const {
+    commercial,
+    metrics = {},
+    expenses = [],
+    expensesBreakdown = {},
+    startDate,
+    endDate,
+  } = params;
 
-    // Create uploads/analytics directory if it doesn't exist
-    const analyticsDir = path.join(__dirname, '..', 'uploads', 'analytics');
-    if (!fs.existsSync(analyticsDir)) {
-      fs.mkdirSync(analyticsDir, { recursive: true });
-    }
-
-    const dateStr = `${startDate || 'all'}_${endDate || 'all'}`;
-    const fileName = `analytics-${commercial._id}-${dateStr}-${Date.now()}.pdf`;
-    const pdfPath = path.join(analyticsDir, fileName);
-
-    // Template path
-    const templatePath = path.join(__dirname, '..', 'templates', 'commercialAnalytics.html');
-
-    // Subcategory labels
-    const subcategoryLabels = {
-      fuel: 'وقود',
-      toll: 'رسوم الطريق السريع',
-      transport: 'نقل',
-      other: 'أخرى',
-    };
-
-    // Format date range
-    let dateRangeText = 'جميع الفترات';
-    if (startDate || endDate) {
-      const start = startDate ? new Date(startDate).toLocaleDateString('fr-FR') : 'بداية';
-      const end = endDate ? new Date(endDate).toLocaleDateString('fr-FR') : 'نهاية';
-      dateRangeText = `${start} - ${end}`;
-    }
-
-    // Prepare expense breakdown data
-    const expenseBreakdownArray = Object.entries(expensesBreakdown).map(([key, value]) => ({
-      label: subcategoryLabels[key] || key,
-      amount: (value || 0).toFixed(2),
-    }));
-
-    // Prepare expenses data - combine subcategory name in Arabic with label
-    const expensesArray = expenses.slice(0, 50).map((expense) => {
-      let subcategoryName = '';
-      let displayText = '';
-      
-      if (expense.subcategory) {
-        if (expense.subcategory === 'other') {
-          // For "other", use customSubcategory or label as the subcategory name
-          subcategoryName = expense.customSubcategory || expense.label || 'أخرى';
-          displayText = subcategoryName; // For "other", we already have the full description
-        } else {
-          // For standard subcategories (fuel, toll, transport), use Arabic label
-          subcategoryName = subcategoryLabels[expense.subcategory] || expense.subcategory;
-          // Combine subcategory with label: "وقود - [label]"
-          if (expense.label && expense.label.trim() !== '') {
-            displayText = `${subcategoryName} - ${expense.label}`;
-          } else {
-            displayText = subcategoryName;
-          }
-        }
-      } else {
-        // No subcategory, just use the label
-        displayText = expense.label || '-';
-      }
-      
-      return {
-        date: new Date(expense.date).toLocaleDateString('fr-FR'),
-        subcategory: displayText,
-        amount: expense.amount.toFixed(2),
-      };
-    });
-
-    // Template data
-    const templateData = {
-      commercialName: commercial.name,
-      commercialEmail: commercial.email,
-      dateRange: dateRangeText,
-      totalRevenue: (metrics.totalRevenue || 0).toFixed(2),
+  const fileName = `analytics-${commercial._id}-${startDate || 'all'}_${endDate || 'all'}-${Date.now()}.pdf`;
+  const data = {
+    documentTitle: `Analyse commerciale — ${commercial.name}`,
+    doc: {
+      title: 'Analyse commerciale',
+      subtitle: formatPeriod(startDate, endDate),
+      meta: [{ label: 'Généré le', value: formatDateTime(new Date()) }],
+    },
+    party: { title: 'Commercial', name: commercial.name, email: commercial.email },
+    metrics: {
+      totalRevenue: metrics.totalRevenue || 0,
       totalOrders: metrics.totalOrders || 0,
-      averageOrderValue: (metrics.averageOrderValue || 0).toFixed(2),
-      totalExpenses: (metrics.totalExpenses || 0).toFixed(2),
-      profit: (metrics.profit || 0).toFixed(2),
-      expenseRatio: (metrics.expenseToRevenueRatio || 0).toFixed(2),
-      hasExpenseBreakdown: expenseBreakdownArray.length > 0,
-      expenseBreakdown: expenseBreakdownArray,
-      hasExpenses: expensesArray.length > 0,
-      expenses: expensesArray,
-      creationDate: new Date().toLocaleString('fr-FR'),
-    };
+      averageOrderValue: metrics.averageOrderValue || 0,
+      totalExpenses: metrics.totalExpenses || 0,
+      profit: metrics.profit || 0,
+      expenseRatio: metrics.expenseToRevenueRatio || 0,
+    },
+    expenseBreakdown: Object.entries(expensesBreakdown).map(([key, value]) => ({
+      label: EXPENSE_SUBCATEGORY_LABELS[key] || key,
+      amount: value || 0,
+    })),
+    expenses: expenses.slice(0, MAX_EXPENSE_ROWS).map((expense) => ({
+      date: expense.date,
+      label: expenseDisplayLabel(expense),
+      amount: expense.amount || 0,
+    })),
+    expensesTruncated: expenses.length > MAX_EXPENSE_ROWS,
+    maxExpenseRows: MAX_EXPENSE_ROWS,
+  };
 
-    // Generate PDF
-    await generatePDFFromHTML({
-      templatePath,
-      templateData,
-      outputPath: pdfPath,
-    });
+  return renderPdfToUploads('commercial-analytics', data, {
+    subDir: 'analytics',
+    fileName,
+    footerLabel: data.documentTitle,
+  });
+};
 
-    return `/uploads/analytics/${fileName}`;
-  } catch (error) {
-    console.error('Error generating commercial analytics PDF:', error);
-    throw error;
-  }
+/**
+ * All-commercials summary (advanced analytics export).
+ * @param {{ analytics: Array<{commercialName,totalRevenue,totalOrders,totalExpenses,profit}>, startDate?, endDate? }} params
+ * @returns {Promise<Buffer>}
+ */
+export const generateAdvancedCommercialAnalyticsPDF = async ({ analytics = [], startDate, endDate }) => {
+  const rows = analytics.map((item) => ({
+    name: item.commercialName || '-',
+    revenue: item.totalRevenue || 0,
+    orders: item.totalOrders || 0,
+    expenses: item.totalExpenses || 0,
+    profit: item.profit || 0,
+  }));
+  const sum = (key) => rows.reduce((total, row) => total + row[key], 0);
+  const data = {
+    documentTitle: 'Analyse des commerciaux',
+    doc: {
+      title: 'Analyse des commerciaux',
+      subtitle: formatPeriod(startDate, endDate),
+      meta: [{ label: 'Généré le', value: formatDateTime(new Date()) }],
+    },
+    rows,
+    totals: { revenue: sum('revenue'), orders: sum('orders'), expenses: sum('expenses'), profit: sum('profit') },
+  };
+  return renderPdf('advanced-commercial-analytics', data, { footerLabel: data.documentTitle });
 };

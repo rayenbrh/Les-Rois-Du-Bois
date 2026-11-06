@@ -1,0 +1,40 @@
+{{!-- Monthly expenses report. Data: doc, categories [{ name, expenses [{ date, label, amount }], total }], benefit, totalExpenses, remaining --}}
+{{> header}}
+
+<div class="kpis">
+  <div class="kpi"><div class="kpi-label">Bénéfice</div><div class="kpi-value">{{money benefit}}</div></div>
+  <div class="kpi"><div class="kpi-label">Total des dépenses</div><div class="kpi-value">{{money totalExpenses}}</div></div>
+  <div class="kpi"><div class="kpi-label">Reste</div><div class="kpi-value {{#if (negative remaining)}}negative{{else}}positive{{/if}}">{{money remaining}}</div></div>
+</div>
+
+{{#each categories}}
+<div class="section keep">
+  <div class="section-subtitle">{{bdi name}}</div>
+  {{#if expenses.length}}
+  <table class="table">
+    <thead>
+      <tr>
+        <th style="width:16%">Date</th>
+        <th>Libellé</th>
+        <th class="num" style="width:22%">Montant</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each expenses}}
+      <tr>
+        <td class="nowrap">{{date date}}</td>
+        <td>{{bdi label}}</td>
+        <td class="num">{{money amount}}</td>
+      </tr>
+      {{/each}}
+      <tr class="total-row">
+        <td colspan="2">Total {{bdi name}}</td>
+        <td class="num">{{money total}}</td>
+      </tr>
+    </tbody>
+  </table>
+  {{else}}
+  <div class="empty">Aucune dépense pour cette catégorie.</div>
+  {{/if}}
+</div>
+{{/each}}

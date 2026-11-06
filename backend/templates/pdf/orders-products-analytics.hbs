@@ -1,0 +1,110 @@
+{{!-- Orders & products analytics. Data: doc, sourceHeaders, kpiRows, sources [{ label, kpis, topProducts, sampleOrders }], overall, performance --}}
+{{> header}}
+
+<div class="kpis">
+  <div class="kpi"><div class="kpi-label">Commandes</div><div class="kpi-value">{{qty overall.totalOrders}}</div></div>
+  <div class="kpi"><div class="kpi-label">Chiffre d'affaires</div><div class="kpi-value">{{money overall.totalRevenue}}</div></div>
+  <div class="kpi"><div class="kpi-label">Bénéfice</div><div class="kpi-value">{{money overall.totalProfit}}</div></div>
+</div>
+<div class="kpis">
+  <div class="kpi"><div class="kpi-label">Panier moyen</div><div class="kpi-value">{{money overall.avgOrderValue}}</div></div>
+  <div class="kpi"><div class="kpi-label">Articles vendus</div><div class="kpi-value">{{qty overall.totalItems}}</div></div>
+  <div class="kpi"><div class="kpi-label">Commandes annulées</div><div class="kpi-value">{{qty overall.canceledOrders}}</div></div>
+</div>
+
+<div class="section keep">
+  <div class="section-title">1. Indicateurs clés par source</div>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Indicateur</th>
+        {{#each sourceHeaders}}<th class="num" style="width:22%">{{this}}</th>{{/each}}
+      </tr>
+    </thead>
+    <tbody>
+      {{#each kpiRows}}
+      <tr>
+        <td class="strong">{{label}}</td>
+        {{#each values}}
+        <td class="num">{{#if (eq type "money")}}{{money value}}{{else if (eq type "percent")}}{{percent value}}{{else}}{{qty value}}{{/if}}</td>
+        {{/each}}
+      </tr>
+      {{/each}}
+    </tbody>
+  </table>
+</div>
+
+<div class="section keep">
+  <div class="section-title">2. Meilleures performances</div>
+  <div class="blocks">
+    <div class="block"><div class="block-title">Meilleur chiffre d'affaires</div><div class="block-name">{{performance.bestRevenue}}</div></div>
+    <div class="block"><div class="block-title">Meilleur bénéfice</div><div class="block-name">{{performance.bestProfit}}</div></div>
+    <div class="block"><div class="block-title">Moins d'annulations</div><div class="block-name">{{performance.lowestCancellations}}</div></div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">3. Meilleurs produits par source</div>
+  {{#each sources}}
+  <div class="section-subtitle">{{label}}</div>
+  {{#if topProducts.length}}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Produit</th>
+        <th class="num" style="width:12%">Quantité</th>
+        <th class="num" style="width:20%">Chiffre d'affaires</th>
+        <th class="num" style="width:20%">Bénéfice</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each topProducts}}
+      <tr>
+        <td>{{bdi productName}}</td>
+        <td class="num">{{qty quantity}}</td>
+        <td class="num">{{money revenue}}</td>
+        <td class="num">{{money profit}}</td>
+      </tr>
+      {{/each}}
+    </tbody>
+  </table>
+  {{else}}
+  <div class="empty">Aucun produit vendu.</div>
+  {{/if}}
+  {{/each}}
+</div>
+
+<div class="section">
+  <div class="section-title">4. Dernières commandes par source</div>
+  {{#each sources}}
+  <div class="section-subtitle">{{label}}</div>
+  {{#if sampleOrders.length}}
+  <table class="table">
+    <thead>
+      <tr>
+        <th style="width:15%">Commande</th>
+        <th style="width:13%">Date</th>
+        <th>Client</th>
+        <th class="num" style="width:10%">Articles</th>
+        <th class="num" style="width:18%">Total</th>
+        <th style="width:15%">Statut</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each sampleOrders}}
+      <tr>
+        <td class="nowrap">{{orderNumber}}</td>
+        <td class="nowrap">{{date date}}</td>
+        <td>{{bdi customer}}</td>
+        <td class="num">{{qty itemCount}}</td>
+        <td class="num">{{money total}}</td>
+        <td>{{status}}</td>
+      </tr>
+      {{/each}}
+    </tbody>
+  </table>
+  {{else}}
+  <div class="empty">Aucune commande.</div>
+  {{/if}}
+  {{/each}}
+</div>

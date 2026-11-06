@@ -3,13 +3,7 @@ import User from '../models/User.model.js';
 import Order from '../models/Order.model.js';
 import Product from '../models/Product.model.js';
 import mongoose from 'mongoose';
-import { generatePDFFromHTML } from '../services/htmlToPdfService.js';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import fs from 'fs';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { generateAdvancedCommercialAnalyticsPDF } from '../services/commercialAnalyticsPdfService.js';
 
 /**
  * Map order source to ecommerce/pos format
@@ -1012,152 +1006,11 @@ export const exportAdvancedAnalyticsPDF = async (req, res, next) => {
 
     const analyticsData = analyticsRes?.success ? analyticsRes.data : [];
 
-    // Format date range
-    let dateRangeText = 'جميع الفترات';
-    if (startDate || endDate) {
-      const start = startDate ? new Date(startDate).toLocaleDateString('fr-FR') : 'بداية';
-      const end = endDate ? new Date(endDate).toLocaleDateString('fr-FR') : 'نهاية';
-      dateRangeText = `${start} - ${end}`;
-    }
+    const pdf = await generateAdvancedCommercialAnalyticsPDF({ analytics: analyticsData, startDate, endDate });
 
-    // Create uploads/analytics directory
-    const analyticsDir = path.join(__dirname, '..', 'uploads', 'analytics');
-    if (!fs.existsSync(analyticsDir)) {
-      fs.mkdirSync(analyticsDir, { recursive: true });
-    }
-
-    const fileName = `advanced-analytics-${Date.now()}.pdf`;
-    const pdfPath = path.join(analyticsDir, fileName);
-
-    // Create HTML template for PDF
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html dir="rtl" lang="ar">
-      <head>
-        <meta charset="UTF-8">
-        <title>تقرير تحليلات المندوبين المتقدم</title>
-        <style>
-          * { margin: 0; padding: 0; box-sizing: border-box; }
-          body {
-            font-family: 'Arial', 'Tahoma', 'DejaVu Sans', sans-serif;
-            direction: rtl;
-            padding: 40px;
-            background: white;
-            color: #000;
-          }
-          .header {
-            text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #FFD700;
-            padding-bottom: 20px;
-          }
-          .header h1 {
-            color: #FFD700;
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 10px;
-          }
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 30px;
-          }
-          table th, table td {
-            padding: 10px;
-            text-align: right;
-            border: 1px solid #000;
-          }
-          table th {
-            background-color: #FFD700;
-            font-weight: bold;
-          }
-          .section {
-            margin-bottom: 30px;
-            page-break-inside: avoid;
-          }
-          .section-title {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 15px;
-            color: #333;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 5px;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h1>تقرير تحليلات المندوبين المتقدم</h1>
-          <p>الفترة: ${dateRangeText}</p>
-          <p>تاريخ الإنشاء: ${new Date().toLocaleString('fr-FR')}</p>
-        </div>
-
-        <div class="section">
-          <div class="section-title">ملخص الأداء</div>
-          <table>
-            <thead>
-              <tr>
-                <th>المندوب</th>
-                <th>الإيرادات</th>
-                <th>الطلبيات</th>
-                <th>المصروفات</th>
-                <th>الربح</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${analyticsData.map(item => `
-                <tr>
-                  <td>${item.commercialName}</td>
-                  <td>${item.totalRevenue.toFixed(2)} TND</td>
-                  <td>${item.totalOrders}</td>
-                  <td>${item.totalExpenses.toFixed(2)} TND</td>
-                  <td>${item.profit.toFixed(2)} TND</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-      </body>
-      </html>
-    `;
-
-    // Generate PDF
-    const templatePath = path.join(__dirname, '..', 'templates', 'advancedAnalytics.html');
-    const templateDir = path.dirname(templatePath);
-    if (!fs.existsSync(templateDir)) {
-      fs.mkdirSync(templateDir, { recursive: true });
-    }
-
-    // Use existing PDF service
-    await generatePDFFromHTML({
-      templatePath: path.join(__dirname, '..', 'templates', 'commercialAnalytics.html'), // Reuse existing template
-      templateData: {
-        commercialName: 'جميع المندوبين',
-        dateRange: dateRangeText,
-        totalRevenue: analyticsData.reduce((sum, item) => sum + item.totalRevenue, 0).toFixed(2),
-        totalOrders: analyticsData.reduce((sum, item) => sum + item.totalOrders, 0),
-        totalExpenses: analyticsData.reduce((sum, item) => sum + item.totalExpenses, 0).toFixed(2),
-        profit: analyticsData.reduce((sum, item) => sum + item.profit, 0).toFixed(2),
-        creationDate: new Date().toLocaleString('fr-FR'),
-      },
-      outputPath: pdfPath,
-      landscape: true,
-    });
-
-    // Send file
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="advanced-analytics-${Date.now()}.pdf"`);
-    
-    const fileStream = fs.createReadStream(pdfPath);
-    fileStream.pipe(res);
-
-    fileStream.on('end', () => {
-      setTimeout(() => {
-        if (fs.existsSync(pdfPath)) {
-          fs.unlinkSync(pdfPath);
-        }
-      }, 5000);
-    });
+    res.end(pdf);
   } catch (error) {
     console.error('Error exporting PDF:', error);
     next(error);
