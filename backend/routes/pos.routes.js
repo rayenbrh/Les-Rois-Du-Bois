@@ -2,6 +2,7 @@ import express from 'express';
 import {
   getStoreDashboard,
   getSales,
+  getCashSummary,
   createSale,
   getPOSProducts,
   createPOSOrder,
@@ -17,6 +18,7 @@ const router = express.Router();
 
 router.get('/store/:storeId/dashboard', protect, getStoreDashboard);
 router.get('/sales', protectPOS, getSales);
+router.get('/cash-summary', protectPOS, getCashSummary);
 router.post('/sales', protectPOS, createSale);
 
 // New POS routes - accessible by admin and cashiers

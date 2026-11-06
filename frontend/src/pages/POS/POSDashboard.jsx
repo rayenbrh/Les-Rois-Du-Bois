@@ -26,6 +26,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import POSInterface from './POSInterface';
 import { withBase } from '../../utils/imageUrl';
+import { formatMillimes } from '../../utils/money';
 
 const POSDashboard = () => {
   const { user, loading: authLoading } = useAuth();
@@ -127,10 +128,15 @@ const POSDashboard = () => {
         return sum + (order.items?.reduce((itemSum, item) => itemSum + item.quantity, 0) || 0);
       }, 0);
 
+      const summaryRes = await api
+        .get('/pos/cash-summary', { params: { startDate: startDate.toISOString(), endDate: endDate.toISOString() } })
+        .catch(() => null);
+
       setStats({
         todaySales: completedOrders.length,
         todayRevenue: completedOrders.reduce((sum, order) => sum + (order.total || 0), 0),
         totalItems,
+        cash: summaryRes?.data?.data || null,
       });
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -446,6 +452,19 @@ const POSDashboard = () => {
             </div>
           </div>
         </div>
+
+        {stats.cash && (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="rounded-lg border-r-4 border-green-500 bg-white p-4 shadow-sm dark:bg-gray-800">
+              <p className="text-sm text-gray-600 dark:text-gray-400">المبلغ المقبوض فعلاً (encaissé)</p>
+              <p className="mt-1 text-2xl font-bold tabular-nums text-green-700 dark:text-green-400">{formatMillimes(stats.cash.encaisseM)}</p>
+            </div>
+            <div className="rounded-lg border-r-4 border-red-500 bg-white p-4 shadow-sm dark:bg-gray-800">
+              <p className="text-sm text-gray-600 dark:text-gray-400">مبيعات بالدين (à crédit)</p>
+              <p className="mt-1 text-2xl font-bold tabular-nums text-red-600 dark:text-red-400">{formatMillimes(stats.cash.aCreditM)}</p>
+            </div>
+          </div>
+        )}
 
         {/* Filters */}
         <div className="bg-white dark:bg-gray-800 rounded-lg p-4 md:p-6 shadow-sm">

@@ -78,6 +78,7 @@ const AnalyticsDashboard = () => {
         totalProfit: profitabilityData.profit || 0,
         avgOrderValue: parseFloat(profitabilityData.avgOrderValue || 0),
         totalItemsSold: profitabilityData.totalItemsSold || 0,
+        pos: profitabilityData.pos || null,
       });
     } catch (error) {
       console.error('Error fetching analytics:', error);
@@ -174,6 +175,12 @@ const AnalyticsDashboard = () => {
                 <p className="text-2xl font-bold mt-2 text-gray-900 dark:text-gray-100">
                   {stats.totalRevenue.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TND
                 </p>
+                {stats.pos && (
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    نقطة البيع: مقبوض {(stats.pos.encaisseM / 1000).toLocaleString('fr-FR', { minimumFractionDigits: 3 })} · بالدين{' '}
+                    {(stats.pos.aCreditM / 1000).toLocaleString('fr-FR', { minimumFractionDigits: 3 })} TND
+                  </p>
+                )}
               </div>
               <DollarSign className="text-gold-500" size={32} />
             </div>

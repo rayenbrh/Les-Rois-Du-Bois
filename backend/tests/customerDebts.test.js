@@ -362,3 +362,21 @@ describe('admin tools', () => {
     assert.ok(logs.length > 0);
   });
 });
+
+describe('encaissé versus à crédit', () => {
+  it('counts only the money received, not the unpaid part of credit sales', async () => {
+    const summary = async () => (await admin().get('/api/pos/cash-summary')).body.data;
+    const before = await summary();
+    const p = await makeProduct({ price: 100 });
+    const c = await makeCustomer('Chokri', '20 000 030');
+    await sell([line(p, 1)], { credit: { customerId: c._id, paidNow: 30 } });
+    await sell([line(p, 1)]);
+    let after = await summary();
+    assert.equal(after.encaisseM - before.encaisseM, 130000);
+    assert.equal(after.aCreditM - before.aCreditM, 70000);
+    assert.equal(after.salesTotalM - before.salesTotalM, 200000);
+    await admin().post(`/api/pos-customers/${c._id}/payments`, { amount: 70 });
+    after = await summary();
+    assert.equal(after.encaisseM - before.encaisseM, 200000);
+  });
+});

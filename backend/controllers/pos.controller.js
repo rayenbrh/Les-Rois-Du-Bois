@@ -15,6 +15,19 @@ import fs from 'fs';
 import { endOfRange } from '../utils/dateRange.js';
 import { withTransaction, httpError } from '../db/transaction.js';
 import { createPosSale, updatePosOrder, creditSummary } from '../services/posSale.service.js';
+import { cashSummary } from '../services/cashSummary.service.js';
+
+// GET /api/pos/cash-summary?startDate&endDate  encaissé vs à crédit (cashiers: their own sales)
+export const getCashSummary = async (req, res, next) => {
+  try {
+    const start = req.query.startDate ? new Date(req.query.startDate) : new Date(new Date().setHours(0, 0, 0, 0));
+    const end = endOfRange(req.query.endDate);
+    const isAdmin = req.user.role === 'admin' || req.user.isAdmin;
+    res.json({ success: true, data: await cashSummary({ start, end, cashierId: isAdmin ? null : req.user._id }) });
+  } catch (error) {
+    next(error);
+  }
+};
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

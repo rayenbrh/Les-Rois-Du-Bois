@@ -2,6 +2,7 @@ import Order from '../models/Order.model.js';
 import Product from '../models/Product.model.js';
 import Category from '../models/Category.model.js';
 import { endOfRange } from '../utils/dateRange.js';
+import { cashSummary } from '../services/cashSummary.service.js';
 
 export const getSalesOverTime = async (req, res, next) => {
   try {
@@ -227,6 +228,8 @@ export const getProfitability = async (req, res, next) => {
         orders: data.orders,
         avgOrderValue: avgOrderValue.toFixed(2),
         totalItemsSold: itemsData.totalItems || 0,
+        // POS: money actually received vs sold on credit (millimes)
+        pos: await cashSummary({ start, end }),
       },
     });
   } catch (error) {
