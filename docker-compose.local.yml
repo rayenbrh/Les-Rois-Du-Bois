@@ -6,6 +6,13 @@ services:
   mongo:
     image: mongo:7
     restart: unless-stopped
+    # Single-node replica set: needed for transactions (sales, debts and payments are saved all-or-nothing)
+    command: ["--replSet", "rs0", "--bind_ip_all"]
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "try { rs.status().ok } catch (e) { rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'mongo:27017' }] }).ok }"]
+      interval: 5s
+      timeout: 10s
+      retries: 30
     volumes:
       - mongo-data:/data/db
 
@@ -13,12 +20,13 @@ services:
     build: .
     restart: unless-stopped
     depends_on:
-      - mongo
+      mongo:
+        condition: service_healthy
     environment:
       - NODE_ENV=production
       - PORT=5000
-      - MONGO_URI=mongodb://mongo:27017/les-rois-des-bois
-      - MONGODB_URI=mongodb://mongo:27017/les-rois-des-bois
+      - MONGO_URI=mongodb://mongo:27017/les-rois-des-bois?replicaSet=rs0
+      - MONGODB_URI=mongodb://mongo:27017/les-rois-des-bois?replicaSet=rs0
       - JWT_SECRET=local-test-secret-change-me
       - SERVE_FRONTEND_DIR=/app/web
     ports:
