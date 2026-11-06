@@ -4,7 +4,8 @@ const fmt = new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 3, maximumFr
 export const fromMillimes = (m) => Math.round(Number(m) || 0) / 1000;
 
 /** 1250500 -> "1 250,500 TND" */
-export const formatMillimes = (m) => `${fmt.format(fromMillimes(m)).replace(/ | /g, ' ')} TND`;
+// Wrapped in left-to-right isolation marks so "1 250,500 TND" never scrambles inside Arabic text
+export const formatMillimes = (m) => `⁦${fmt.format(fromMillimes(m)).replace(/ | /g, ' ')} TND⁩`;
 
 /** Date and time shown in Tunis time. */
 export const formatTunisDateTime = (value) =>
