@@ -58,6 +58,11 @@ export const errorHandler = (err, req, res, next) => {
   res.status(statusCode).json({
     success: false,
     message,
+    // Machine-readable details for money errors (e.g. OVERPAYMENT, OVERPAID_CHOICE_REQUIRED)
+    ...(typeof err.code === 'string' && { code: err.code }),
+    ...(err.dueM !== undefined && { dueM: err.dueM }),
+    ...(err.excessM !== undefined && { excessM: err.excessM }),
+    ...(Array.isArray(err.stockIssues) && { stockIssues: err.stockIssues }),
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
   });
 };

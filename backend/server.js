@@ -37,6 +37,8 @@ import settingsRoutes from './routes/settings.routes.js';
 import commercialRoutes from './routes/commercial.routes.js';
 import homepageRoutes from './routes/homepage.routes.js';
 import supplierInvoiceRoutes from './routes/supplierInvoice.routes.js';
+import posCustomerRoutes from './routes/posCustomer.routes.js';
+import './db/transaction.js';
 
 import './models/index.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.middleware.js';
@@ -192,6 +194,7 @@ app.use('/api/expense-categories', expenseCategoryRoutes);
 app.use('/api/returns', returnRoutes);
 app.use('/api/crm', crmRoutes);
 app.use('/api/pos', posRoutes);
+app.use('/api/pos-customers', posCustomerRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/commercial', commercialRoutes);
@@ -258,14 +261,21 @@ mongoose.connection.on('disconnected', () => console.warn('⚠️  MongoDB disco
 mongoose.connection.on('reconnected', () => console.log('✅ MongoDB reconnected'));
 mongoose.connection.on('error', (err) => console.error('❌ MongoDB error:', err.message));
 
+// Tests import the app and manage their own database connection
+const isTest = process.env.NODE_ENV === 'test';
 const PORT = process.env.PORT || 5000;
-const server = app.listen(PORT, () => {
-  console.log(`🚀 Server listening on port ${PORT} (${process.env.NODE_ENV || 'development'})`);
-});
-server.keepAliveTimeout = 65000;
-server.headersTimeout = 66000;
+const server = isTest
+  ? null
+  : app.listen(PORT, () => {
+      console.log(`🚀 Server listening on port ${PORT} (${process.env.NODE_ENV || 'development'})`);
+    });
+if (server) {
+  server.keepAliveTimeout = 65000;
+  server.headersTimeout = 66000;
+  connectWithRetry();
+}
 
-connectWithRetry();
+export default app;
 
 // ---------------------------------------------------------------------------
 // Process safety
@@ -279,6 +289,7 @@ process.on('uncaughtException', (error) => {
 
 const shutdown = (signal) => {
   console.log(`🛑 ${signal} received - shutting down gracefully`);
+  if (!server) process.exit(0);
   server.close(() => {
     mongoose.connection.close(false).finally(() => process.exit(0));
   });

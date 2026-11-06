@@ -4,7 +4,7 @@ const auditLogSchema = new mongoose.Schema(
   {
     resourceType: {
       type: String,
-      enum: ['user', 'product', 'category', 'order', 'invoice', 'inventory', 'special_product', 'supplier', 'purchase_order'],
+      enum: ['user', 'product', 'category', 'order', 'invoice', 'inventory', 'special_product', 'supplier', 'purchase_order', 'pos_customer', 'payment'],
       required: true,
     },
     resourceId: {
@@ -13,7 +13,7 @@ const auditLogSchema = new mongoose.Schema(
     },
     action: {
       type: String,
-      enum: ['create', 'update', 'delete', 'status_change', 'price_change', 'stock_change', 'assign'],
+      enum: ['create', 'update', 'delete', 'status_change', 'price_change', 'stock_change', 'assign', 'payment', 'reversal', 'merge', 'archive'],
       required: true,
     },
     userId: {

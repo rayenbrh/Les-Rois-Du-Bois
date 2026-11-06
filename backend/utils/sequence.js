@@ -39,7 +39,7 @@ const seedOrders = async () => {
     .select('orderNumber')
     .lean();
   const fromLast = last ? parseInt(last.orderNumber.slice(4), 10) || 0 : 0;
-  const count = await Order.estimatedDocumentCount();
+  const count = await Order.countDocuments(); // works inside transactions (estimatedDocumentCount does not)
   return Math.max(fromLast, count);
 };
 

@@ -15,6 +15,8 @@ import './Lead.model.js';
 import './Order.model.js';
 import './OrderActivity.model.js';
 import './Payment.model.js';
+import './PosCustomer.model.js';
+import './CustomerLedgerEntry.model.js';
 import './Product.model.js';
 import './PurchaseOrder.model.js';
 import './Return.model.js';

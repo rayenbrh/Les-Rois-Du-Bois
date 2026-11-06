@@ -168,6 +168,11 @@ const orderSchema = new mongoose.Schema(
       enum: ['unpaid', 'partial', 'paid'],
       default: 'unpaid',
     },
+    // POS credit ("non payé") sales: linked customer account and amounts in millimes
+    posCustomerId: { type: mongoose.Schema.Types.ObjectId, ref: 'PosCustomer', default: null },
+    creditTotalM: { type: Number, default: null }, // order total still counted on the account
+    creditPaidM: { type: Number, default: null }, // paid so far on this order
+    idempotencyKey: { type: String },
     notes: {
       type: String,
       default: '',
@@ -241,6 +246,8 @@ orderSchema.index({ commercialId: 1, createdAt: -1 });
 orderSchema.index({ storeId: 1, createdAt: -1 });
 orderSchema.index({ source: 1, createdAt: -1 });
 orderSchema.index({ cashierId: 1, createdAt: -1 });
+orderSchema.index({ posCustomerId: 1, createdAt: 1 });
+orderSchema.index({ idempotencyKey: 1 }, { unique: true, sparse: true });
 orderSchema.index({ commercialId: 1, source: 1, createdAt: -1 });
 
 export default mongoose.model('Order', orderSchema);
