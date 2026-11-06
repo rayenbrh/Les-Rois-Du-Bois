@@ -46,6 +46,7 @@ const OrdersProductsAnalytics = lazy(() => import('./pages/Analytics/OrdersProdu
 const CommercialDetail = lazy(() => import('./pages/Analytics/CommercialDetail'));
 const AuditLogs = lazy(() => import('./pages/AuditLogs/AuditLogs'));
 const SuppliersList = lazy(() => import('./pages/Suppliers/SuppliersList'));
+const SupplierAccount = lazy(() => import('./pages/SupplierAccount/SupplierAccount'));
 const ExpensesList = lazy(() => import('./pages/Expenses/ExpensesList'));
 const ExpenseCategories = lazy(() => import('./pages/Expenses/ExpenseCategories'));
 const ReturnsList = lazy(() => import('./pages/Returns/ReturnsList'));
@@ -172,6 +173,7 @@ const AppRoutes = () => {
             <Route path="invoices/:id" element={page(InvoiceDetail)} />
             <Route path="pos" element={<Navigate to="/pos" replace />} />
             <Route path="suppliers" element={page(SuppliersList)} />
+            <Route path="suppliers/:id" element={page(SupplierAccount)} />
             <Route path="expenses" element={page(ExpensesList)} />
             <Route path="expenses/categories" element={page(ExpenseCategories)} />
             <Route path="returns" element={page(ReturnsList)} />
