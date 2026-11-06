@@ -26,6 +26,7 @@ import './SpecialProduct.model.js';
 import './StockAlert.model.js';
 import './Store.model.js';
 import './Supplier.model.js';
+import './SupplierLedgerEntry.model.js';
 import './SupplierInvoice.model.js';
 import './TopSellerProduct.model.js';
 import './User.model.js';
