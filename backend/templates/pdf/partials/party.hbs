@@ -1,0 +1,10 @@
+{{!-- Customer / supplier block. Params: title, party { name, contact?, phone?, email?, address?, taxId? } --}}
+<div class="block">
+  <div class="block-title">{{title}}</div>
+  <div class="block-name">{{bdi party.name}}</div>
+  {{#if party.contact}}<div>Contact : {{bdi party.contact}}</div>{{/if}}
+  {{#if party.address}}<div>{{bdi party.address}}</div>{{/if}}
+  {{#if party.phone}}<div>Tél. : {{bdi party.phone}}</div>{{/if}}
+  {{#if party.email}}<div>{{party.email}}</div>{{/if}}
+  {{#if party.taxId}}<div>Matricule fiscal : {{bdi party.taxId}}</div>{{/if}}
+</div>

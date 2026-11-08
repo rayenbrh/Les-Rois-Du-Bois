@@ -1,0 +1,49 @@
+{{!-- Commercial analytics. Data: doc, party, metrics, expenseBreakdown [{ label, amount }], expenses [{ date, label, amount }] --}}
+{{> header}}
+
+<div class="blocks">
+  {{> party title=party.title party=party}}
+</div>
+
+<div class="kpis">
+  <div class="kpi"><div class="kpi-label">Chiffre d'affaires</div><div class="kpi-value">{{money metrics.totalRevenue}}</div></div>
+  <div class="kpi"><div class="kpi-label">Commandes</div><div class="kpi-value">{{qty metrics.totalOrders}}</div></div>
+  <div class="kpi"><div class="kpi-label">Panier moyen</div><div class="kpi-value">{{money metrics.averageOrderValue}}</div></div>
+</div>
+<div class="kpis">
+  <div class="kpi"><div class="kpi-label">Dépenses</div><div class="kpi-value">{{money metrics.totalExpenses}}</div></div>
+  <div class="kpi"><div class="kpi-label">Bénéfice net</div><div class="kpi-value {{#if (negative metrics.profit)}}negative{{else}}positive{{/if}}">{{money metrics.profit}}</div></div>
+  <div class="kpi"><div class="kpi-label">Dépenses / CA</div><div class="kpi-value">{{percent metrics.expenseRatio}}</div></div>
+</div>
+
+{{#if expenseBreakdown.length}}
+<div class="section">
+  <div class="section-title">Répartition des dépenses</div>
+  <table class="table">
+    <thead><tr><th>Type de dépense</th><th class="num" style="width:30%">Montant</th></tr></thead>
+    <tbody>
+      {{#each expenseBreakdown}}
+      <tr><td>{{bdi label}}</td><td class="num">{{money amount}}</td></tr>
+      {{/each}}
+      <tr class="total-row"><td>Total</td><td class="num">{{money metrics.totalExpenses}}</td></tr>
+    </tbody>
+  </table>
+</div>
+{{/if}}
+
+<div class="section">
+  <div class="section-title">Détail des dépenses</div>
+  {{#if expenses.length}}
+  <table class="table">
+    <thead><tr><th style="width:16%">Date</th><th>Libellé</th><th class="num" style="width:22%">Montant</th></tr></thead>
+    <tbody>
+      {{#each expenses}}
+      <tr><td class="nowrap">{{date date}}</td><td>{{bdi label}}</td><td class="num">{{money amount}}</td></tr>
+      {{/each}}
+    </tbody>
+  </table>
+  {{#if expensesTruncated}}<div class="muted">Seules les {{maxExpenseRows}} dépenses les plus récentes sont affichées.</div>{{/if}}
+  {{else}}
+  <div class="empty">Aucune dépense sur la période.</div>
+  {{/if}}
+</div>

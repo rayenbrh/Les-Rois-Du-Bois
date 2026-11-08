@@ -46,3 +46,6 @@ backend/uploads/*
 # Local deployment backups (contain secrets)
 easypanel-old-config-backup.txt
 backups/
+
+# Local PDF review screenshots
+pdf-review/

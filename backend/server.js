@@ -39,6 +39,7 @@ import homepageRoutes from './routes/homepage.routes.js';
 import supplierInvoiceRoutes from './routes/supplierInvoice.routes.js';
 import posCustomerRoutes from './routes/posCustomer.routes.js';
 import './db/transaction.js';
+import { closeBrowser } from './services/pdf/browser.js';
 
 import './models/index.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.middleware.js';
@@ -291,7 +292,9 @@ const shutdown = (signal) => {
   console.log(`🛑 ${signal} received - shutting down gracefully`);
   if (!server) process.exit(0);
   server.close(() => {
-    mongoose.connection.close(false).finally(() => process.exit(0));
+    closeBrowser()
+      .then(() => mongoose.connection.close(false))
+      .finally(() => process.exit(0));
   });
   setTimeout(() => process.exit(0), 10000).unref();
 };

@@ -1,0 +1,36 @@
+{{!--
+  Commercial document (Facture, Bon de commande, Facture fournisseur).
+  Data:
+    doc       { title, number, meta: [{ label, value }] }
+    party     { title, name, contact?, phone?, email?, address?, taxId? }
+    details   [{ label, value }]               right-hand info block (optional)
+    items     [{ designation, option, quantity, unitPrice, total }]
+    totals    { subtotal, discount, tax, total, paid, remaining, status { key, label } }
+    notes     string (optional)
+    signatures [string] (optional, e.g. ["Signature du client", "Signature & cachet"])
+--}}
+{{> header}}
+
+<div class="blocks">
+  {{> party title=party.title party=party}}
+  {{#if details.length}}
+  <div class="block">
+    <div class="block-title">Informations</div>
+    {{#each details}}
+      <div class="kv"><span>{{label}}</span><span>{{bdi value}}</span></div>
+    {{/each}}
+  </div>
+  {{/if}}
+</div>
+
+{{> items-table}}
+
+{{> totals}}
+
+{{> notes}}
+
+{{#if signatures.length}}
+<div class="signatures">
+  {{#each signatures}}<div class="signature">{{this}}</div>{{/each}}
+</div>
+{{/if}}

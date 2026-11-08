@@ -17,6 +17,13 @@ const settingSchema = new mongoose.Schema(
     storeLogo: {
       type: String,
     },
+    // Company identity printed on every PDF (empty = built-in defaults)
+    companyName: { type: String, trim: true, default: '' },
+    companyAddress: { type: String, trim: true, default: '' },
+    companyPhone: { type: String, trim: true, default: '' },
+    companyEmail: { type: String, trim: true, default: '' },
+    companyTaxId: { type: String, trim: true, default: '' },
+    companyLogo: { type: String, trim: true, default: '' }, // "/uploads/settings/<file>"
   },
   {
     timestamps: true,
@@ -24,4 +31,3 @@ const settingSchema = new mongoose.Schema(
 );
 
 export default mongoose.model('Setting', settingSchema);
-

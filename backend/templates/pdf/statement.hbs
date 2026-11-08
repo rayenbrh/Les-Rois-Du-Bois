@@ -1,0 +1,61 @@
+{{!--
+  Relevé de compte. Build the data with buildStatementData() (services/pdf/statement.js),
+  see the data shape documented there.
+--}}
+{{> header}}
+
+<div class="blocks">
+  {{> party title=party.title party=party}}
+  <div class="block">
+    <div class="block-title">Période</div>
+    <div class="block-name">{{period.label}}</div>
+    <div class="kv"><span>Solde d'ouverture</span><span class="num">{{money openingBalance}}</span></div>
+    <div class="kv"><span>Total débit</span><span class="num">{{money totalDebit}}</span></div>
+    <div class="kv"><span>Total crédit</span><span class="num">{{money totalCredit}}</span></div>
+    <div class="kv strong"><span>Solde de clôture</span><span class="num">{{money closingBalance}}</span></div>
+  </div>
+</div>
+
+<table class="table statement">
+  <thead>
+    <tr>
+      <th style="width:12%">Date</th>
+      <th style="width:7%">Heure</th>
+      <th>Opération</th>
+      <th style="width:18%">Référence</th>
+      <th class="num" style="width:13%">Débit</th>
+      <th class="num" style="width:13%">Crédit</th>
+      <th class="num" style="width:15%">Solde</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="nowrap">{{date period.from}}</td>
+      <td></td>
+      <td class="strong">Solde d'ouverture</td>
+      <td></td>
+      <td class="num"></td>
+      <td class="num"></td>
+      <td class="num strong">{{money openingBalance}}</td>
+    </tr>
+    {{#each entries}}
+    <tr>
+      <td class="nowrap">{{date date}}</td>
+      <td class="nowrap">{{time date}}</td>
+      <td>{{bdi operation}}</td>
+      <td class="nowrap">{{bdi reference ""}}</td>
+      <td class="num">{{#if (positive debit)}}{{money debit}}{{/if}}</td>
+      <td class="num">{{#if (positive credit)}}{{money credit}}{{/if}}</td>
+      <td class="num">{{money balance}}</td>
+    </tr>
+    {{/each}}
+    <tr class="total-row">
+      <td colspan="4">Solde de clôture{{#if period.to}} au {{date period.to}}{{/if}}</td>
+      <td class="num">{{money totalDebit}}</td>
+      <td class="num">{{money totalCredit}}</td>
+      <td class="num">{{money closingBalance}}</td>
+    </tr>
+  </tbody>
+</table>
+
+{{> notes}}

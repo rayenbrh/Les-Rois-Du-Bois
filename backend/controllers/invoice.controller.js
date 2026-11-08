@@ -338,8 +338,10 @@ export const generatePDF = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'الفاتورة غير موجودة' });
     }
 
-    // If PDF already exists, return it
-    if (invoice.pdfPath) {
+    // Without the job queue the PDF is regenerated on every request (payments and company
+    // details change). With the queue, an already generated file is served as before.
+    const queueEnabled = process.env.REDIS_HOST && process.env.USE_JOB_QUEUE === 'true';
+    if (invoice.pdfPath && queueEnabled) {
       const fullPath = path.join(__dirname, '..', invoice.pdfPath);
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `inline; filename="${invoice.invoiceNumber}.pdf"`);
@@ -502,13 +504,10 @@ export const sendEmail = async (req, res, next) => {
       });
     }
 
-    // Ensure PDF is generated first
-    let pdfPath = invoice.pdfPath;
-    if (!pdfPath) {
-      pdfPath = await generateInvoicePDF(invoice);
-      invoice.pdfPath = pdfPath;
-      await invoice.save();
-    }
+    // (Re)generate the PDF so the attachment reflects current payments and company details
+    const pdfPath = await generateInvoicePDF(invoice);
+    invoice.pdfPath = pdfPath;
+    await invoice.save();
 
     // Check if Redis/job queue is available
     const useQueue = process.env.REDIS_HOST && process.env.USE_JOB_QUEUE === 'true';
