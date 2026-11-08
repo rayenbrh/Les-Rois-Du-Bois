@@ -380,3 +380,15 @@ describe('encaissé versus à crédit', () => {
     assert.equal(after.encaisseM - before.encaisseM, 200000);
   });
 });
+
+describe('statement PDF', () => {
+  it('downloads a customer statement for a period', async () => {
+    const p = await makeProduct({ price: 100 });
+    const c = await makeCustomer('Relevé Test', '20 000 040');
+    await sell([line(p, 1)], { credit: { customerId: c._id } });
+    const res = await admin().get(`/api/pos-customers/${c._id}/statement?to=2099-12-31`).buffer(true);
+    assert.equal(res.status, 200, res.text);
+    assert.match(res.headers['content-type'], /application\/pdf/);
+    assert.ok(res.body.length > 1000);
+  });
+});

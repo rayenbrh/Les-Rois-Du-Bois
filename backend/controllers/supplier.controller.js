@@ -5,6 +5,7 @@ import Product from '../models/Product.model.js';
 import { withTransaction, httpError } from '../db/transaction.js';
 import { parseAmount, fromMillimes } from '../utils/money.js';
 import { createAuditLog } from '../utils/auditLogger.js';
+import { supplierStatementPdf } from '../services/accountStatement.service.js';
 import {
   loadSupplier,
   searchSuppliers,
@@ -345,9 +346,19 @@ export const updateCostPrices = async (req, res, next) => {
   }
 };
 
-// GET /api/suppliers/:id/statement?from&to  (PDF added later)
-export const getStatement = (req, res) => {
-  res.status(501).json({ success: false, code: 'NOT_READY', message: 'كشف حساب المورد غير جاهز بعد' });
+// GET /api/suppliers/:id/statement?from=YYYY-MM-DD&to=YYYY-MM-DD  relevé de compte PDF
+export const getStatement = async (req, res, next) => {
+  try {
+    const supplier = await Supplier.findById(req.params.id);
+    if (!supplier) throw httpError(404, 'المورد غير موجود');
+    const merged = await Supplier.find({ mergedInto: supplier._id }).select('_id').lean();
+    const pdf = await supplierStatementPdf({ supplier, ids: [supplier._id, ...merged.map((m) => m._id)], query: req.query });
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="releve-${req.params.id}.pdf"`);
+    res.send(pdf);
+  } catch (error) {
+    next(error);
+  }
 };
 
 // GET /api/suppliers/accounts/check  report mismatches, change nothing

@@ -4,6 +4,7 @@ import Order from '../models/Order.model.js';
 import { withTransaction, httpError } from '../db/transaction.js';
 import { parseAmount } from '../utils/money.js';
 import { createAuditLog } from '../utils/auditLogger.js';
+import { customerStatementPdf } from '../services/accountStatement.service.js';
 import {
   findOrCreateCustomer,
   searchCustomers,
@@ -243,6 +244,20 @@ export const setArchived = async (req, res, next) => {
 export const runCheck = async (req, res, next) => {
   try {
     res.json({ success: true, data: await checkAccounts() });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// GET /api/pos-customers/:id/statement?from=YYYY-MM-DD&to=YYYY-MM-DD  (admin): relevé de compte PDF
+export const getStatement = async (req, res, next) => {
+  try {
+    const customer = await loadCustomer(req.params.id);
+    const merged = await PosCustomer.find({ mergedInto: customer._id }).select('_id').lean();
+    const pdf = await customerStatementPdf({ customer, ids: [customer._id, ...merged.map((m) => m._id)], query: req.query });
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="releve-${req.params.id}.pdf"`);
+    res.send(pdf);
   } catch (error) {
     next(error);
   }

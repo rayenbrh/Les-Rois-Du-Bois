@@ -29,6 +29,9 @@ export const setup = async () => {
 };
 
 export const teardown = async () => {
+  // PDF tests start a shared headless browser: close it so the test process can exit
+  const { closeBrowser } = await import("../services/pdf/browser.js");
+  await closeBrowser();
   await mongoose.disconnect();
   await replSet?.stop();
 };

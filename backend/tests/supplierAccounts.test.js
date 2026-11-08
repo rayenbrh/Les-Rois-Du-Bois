@@ -297,7 +297,9 @@ describe('supplier admin tools', () => {
     assert.equal(upd.body.data.phone, '71 000 000');
     assert.equal((await cashier().get(`/api/suppliers/${res.body.data._id}/timeline`)).status, 403);
     assert.equal((await cashier().post(`/api/suppliers/${res.body.data._id}/movements`, { type: 'advance_given', amount: 1 })).status, 403);
-    assert.equal((await admin().get(`/api/suppliers/${res.body.data._id}/statement?from=2026-01-01&to=2026-02-01`)).status, 501);
+    const statement = await admin().get(`/api/suppliers/${res.body.data._id}/statement?from=2026-01-01&to=2026-02-01`).buffer(true);
+    assert.equal(statement.status, 200, statement.text);
+    assert.match(statement.headers['content-type'], /application\/pdf/);
     await expectConsistent();
   });
 
