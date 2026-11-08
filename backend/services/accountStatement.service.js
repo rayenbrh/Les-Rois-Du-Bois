@@ -57,7 +57,9 @@ const build = async ({ Model, accountField, ids, query, operations, dateField })
       credit: e.amountM < 0 ? fromMillimes(-e.amountM) : 0,
     };
   });
-  return { opening: fromMillimes(opening), entries, period: { from, to } };
+  // Shown dates: the calendar days asked for (midday UTC stays on the same day in Tunis)
+  const shown = (day) => (day ? new Date(`${day}T12:00:00.000Z`) : null);
+  return { opening: fromMillimes(opening), entries, period: { from: shown(query.from), to: shown(query.to) || new Date() } };
 };
 
 /** ids = the account plus any accounts merged into it. */
